@@ -30,8 +30,8 @@ function(input, output) {
     str3 <- paste("&emsp; 	1.	The first line of the file contains the gene identifier 'gene_id' (column 1), gene group classification 'Groups' (column 2) followed by the patient IDs e.g. TCGA.01.1A2B, one per column, starting at column 3. Column 1 gene identifier has to be labelled 'gene_id' and column 2 header should be labelled 'Groups' for using this tool. Other titles may cause the program to display errors. ")
     str4 <- paste("&emsp; 	2.	The second line of the file contains the patient response classification e.g. Fav/Unf for favorable outcome group vs the unfavorable outcome group or Normal/Tumor, etc., in alphabetical order, starting at column 3. The first two columns for this row should be blank.")
     str5 <- paste("&emsp; 	3.	The remaining lines contain gene expression measurements one line per gene, described in the format below.")
-    str6 <- paste("&emsp;&emsp;  a) Column_1. This should contain the gene name, for the user's reference.")
-    str7 <- paste("&emsp;&emsp;  b)   Column_ 2.  This should contain the gene group classification e.g. O/U for Over-expressed/Under-expressed or Hyper/Hypo for hypermethylated/hypomethylated in alphabetical order. If only one gene group, use any alphabet e.g. A for each row instead.")
+    str6 <- paste("&emsp;&emsp;  a) Column_1. This should contain the gene name, for the user's reference. Each row should be unique. For microarray data, for example, gene and probes can be combined into a single identifier using any delimitor except the '|'. Delimitors such as >,;:#%&(!)_+ are acceptable.")
+    str7 <- paste("&emsp;&emsp;  b)   Column_ 2.  This should contain the gene group classification e.g. O/U for Over-expressed/Under-expressed or Hyper/Hypo for hypermethylated/hypomethylated in alphabetical order. If only one gene group, use any alphabet e.g. A or even na for each row instead.")
     str8 <- paste("&emsp;&emsp;  c)   Remaining Columns. These should contain the expression measurements as numbers. Data inputted should be non-negative. Columns and rows with zero variance should be removed from the data. Rows containing missing expression measurements, should be also be removed from the input data or it will cause the tool to run into errors." )
     str9 <- paste("NOTE: Clustering is based on scaled data, if the user chooses this option, prior to input into heatmap R function.")
     str10 <- paste("Example format for Data")
@@ -60,11 +60,11 @@ function(input, output) {
   output$Eg2 <- renderTable({
     coln1 <- c("gene_id", "Groups","GSM9981", "GSM1870", "GSM4618", "GSM7689", "GSM8772", "GSM1121","GSM1250", "GSM3112", "GSM4987", "GSM1277")
     coln2 <- c(" ", " ", rep("MM", 5), rep("MUGS", 2), "NPC", rep("SM", 2))
-    s.1 <- c("YWHAE>210996_s_at", "A", 1.47, 2.18, 5.87, 9.12, 7.34, 1.56, 3.0, 7.77, 3.40, 1.56 )
-    s.2 <- c("YWHAE>201020_at", "A", 1.98, 7.93, 2.76, 9.11, 8.46, 0.98, 5.98, 8.19, 8.91, 5.98)
-    s.3 <- c("YWHAH>33323_r_at", "A", 8.02, 8.00, 2.17, 10.12, 8.76, 9.76, 3.76, 0.02, 3.67, 7.94)
-    s.4 <- c("YWHAB>208743_s_at", "A", 2.75, 5.99, 3.19, 11.86, 6.54, 8.17, 2.00, 0.99, 2.00, 1.17)
-    s.5 <- c("YWHAQ>213699_s_at", "A", 9.35, 8.96, 6.67, 8.33, 3.98, 7.11, 1.67, 1.01, 5.18, 8.17)
+    s.1 <- c("YWHAE>210996_s_at", "na", 1.47, 2.18, 5.87, 9.12, 7.34, 1.56, 3.0, 7.77, 3.40, 1.56 )
+    s.2 <- c("YWHAE>201020_at", "na", 1.98, 7.93, 2.76, 9.11, 8.46, 0.98, 5.98, 8.19, 8.91, 5.98)
+    s.3 <- c("YWHAH>33323_r_at", "na", 8.02, 8.00, 2.17, 10.12, 8.76, 9.76, 3.76, 0.02, 3.67, 7.94)
+    s.4 <- c("YWHAB>208743_s_at", "na", 2.75, 5.99, 3.19, 11.86, 6.54, 8.17, 2.00, 0.99, 2.00, 1.17)
+    s.5 <- c("YWHAQ>213699_s_at", "na", 9.35, 8.96, 6.67, 8.33, 3.98, 7.11, 1.67, 1.01, 5.18, 8.17)
     
     d.f <- rbind.data.frame(coln2, s.1, s.2, s.3, s.4, s.5)
     colnames(d.f) <- coln1
@@ -111,7 +111,7 @@ function(input, output) {
     }
     else 
       return(NULL)
-    # dim(data)
+   
     Dataset <- data.frame(d)
     return(Dataset)
   })
@@ -143,9 +143,6 @@ function(input, output) {
     colors <- c(seq(-1,-0.2,length=100),seq(-0.2,0.2,length=100),seq(0.2,1,length=100)) # check slider
     
     cc1 <- col_color(col1 = col1, col.groups= col.groups, number.col.groups= number.col.groups, col.groups.name= col.groups.name)
-    
-    check_coln <<- colnames(data4)
-    check_cc1 <<- cc1
     
     z <- list()
     
@@ -330,9 +327,6 @@ function(input, output) {
     data <- gw_data()
     n = ncol(input_gw_data())-2
     
-    check_data <<- data
-    check_gw_data <<- input_gw_data()
-    
     data$var <- apply(data[, c(1:n)], 1, var)
     data$mad <- apply(data[, c(1:n)], 1, mad)
     data$IQR <- apply(data[, c(1:n)], 1, IQR)
@@ -429,10 +423,7 @@ function(input, output) {
   }) 
   
   extracted_data2 <- reactive({
-    #if(!is.null(input$gw_file_1)) 
-    #  {
     if (input$gw_file_1 == 'GW_Example_1') {
-    #if(!is.null(extracted_data())){
         data3 <- extracted_data()
         colheaders <- sub("^.*\\.","", colnames(data3))
         names(data3) <- gsub("\\.{2}.*", "", colnames(data3))
@@ -453,8 +444,7 @@ function(input, output) {
         # else if(grepl(".rds", inFile_1[1])) { data5 = read.rds(as.character(inFile_1$datapath)) }
       } 
       return(data.frame(data5))
-   # } else
-  #  return(NULL)
+  
    })
   
   output$downloadSubset <- downloadHandler(
@@ -725,7 +715,6 @@ function(input, output) {
       if(is.null(mv_hm_data())) {
         hm <- NULL
       } else {    
-        #eval(mv_hm_data()$hm[[1]])
         tgplot(z= mv_hm_data()$z[[1]], col1 = mv_hm_data()$col1, cc1 = mv_hm_data()$cc1, cc2 = mv_hm_data()$cc2, 
                number.col.groups =  mv_hm_data()$number.col.groups, number.row.groups = mv_hm_data()$number.row.groups, 
                row.groups.name = mv_hm_data()$row.groups.name, col.groups.name = mv_hm_data()$col.groups.name)
@@ -945,6 +934,7 @@ function(input, output) {
         
       con <- consensus_clustering(dinput=mv_data2, mK=10, rep=as.integer(input$con_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$con_dist, iL=input$con_hclust, fL=input$con_hclust)
       
+      
       return(list(output= con[["output"]][[as.integer(input$con_opt_k)]]$consensusClass, data= con[["data"]], distance=con[["distance"]]))
      #  return(as.data.frame(mv_data2))
     })
@@ -957,34 +947,8 @@ function(input, output) {
     )
       
    output$gw_cc <- renderPlot ({
-     # mv_data <- mv_hm_data()$data
-    #  mv_data2 <- as.matrix(mv_data)
-    #  par(mfrow= c(1, 3))
-     # consen()
-      #con <- consensus_clustering(dinput=mv_data2, mK=10, rep=as.integer(input$con_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$con_dist, iL=input$con_hclust, fL=input$con_hclust)
-    
-      if (input$gw_file3 == "GW_Example3")
-     {
-       mv_data <- mv_hm_data()$data
-       
-     } else if(input$gw_file3 == "load_my_own_gw_subset")
-     {
-       inFile4 <- input$gw_file4
-       if (is.null(inFile4))
-         return(NULL)
-       else if(grepl(".csv", inFile4[1])) { mv_data = read.csv(as.character(inFile4$datapath), header = TRUE, sep = ",", stringsAsFactors = F, row.names = 1) }
-       else if(grepl(".txt", inFile4[1])) { mv_data = read.table(as.character(inFile4$datapath), header = TRUE, sep = "\t", stringsAsFactors = F, row.names = 1) }
-       # else if(grepl(".rds", inFile4[1])) { mv_data = read.rds(as.character(inFile4$datapath)) }
-       
-     } else
-       return(NULL)
-     
-     mv_data2 <- as.matrix(mv_data)
-     
      par(mfrow= c(1, 3))
-     consensus_clustering(dinput=mv_data2, mK=10, rep=as.integer(input$con_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$con_dist, iL=input$con_hclust, fL=input$con_hclust)
-     
-     
+     consen()
      
   })
    
@@ -1006,9 +970,6 @@ function(input, output) {
      plot(sil[["sk2"]],  main = "Silhouette Plot of 'ALL' Samples", cex.names=0.6, max.strlen= 8, col = sil[["sk2.col"]])
      plot(sil[["sk3"]],  main = "Silhouette Plot of 'CORE' Samples", cex.names=0.6, max.strlen= 8, col = colors[1:sil[["k"]]]) #sil[["sk3.col"]]
      
-     check_d <<- data
-     check_r <<- consen()[["output"]]
-     
      return(list(core = sil$core.samples, clust = sil$sk3, order = consen()[["output"]]))
      
      } else if(input$gw_file5 == "load_my_own_gw_subset2" & input$gw_file7 == "load_my_own_gw_subset3"){
@@ -1029,8 +990,6 @@ function(input, output) {
        mv_data2 <- as.data.frame(mv_data)
        c_order2 <- as.data.frame(c_order)
        
-       check_mv_data2 <<- mv_data2
-       check_c_order <<-  c_order2
        k= unique(c_order2$Cluster)[length(unique(c_order2$Cluster))]
        
        sil = silhouette_plot3(data_use= mv_data2, opt_k= k, res= c_order2, dist = input$sil_dist, upto_width= as.numeric(input$upto_slider), cols = c("orange", "darkblue", "black", "maroon", "violet", "plum2")[1:k])
@@ -1111,8 +1070,6 @@ function(input, output) {
           mv_data2 <- as.data.frame(mv_data)
           c_order2 <- as.data.frame(c_order)
          
-          check_mv_data2 <<- mv_data2
-          check_c_order <<-  c_order2
           k= unique(c_order2$Cluster)[length(unique(c_order2$Cluster))]
          
           sil = silhouette_plot3(data_use= mv_data2, opt_k= k, res= c_order2, dist = input$sil_dist, upto_width= as.numeric(input$upto_slider), cols = c("orange", "darkblue", "black", "maroon", "violet", "plum2")[1:k])
@@ -1159,8 +1116,7 @@ function(input, output) {
         cc_clust <- as.data.frame(consen()$output)
         colnames(cc_clust) <- "Cluster"
         cc_clust$Sample <- rownames(cc_clust)
-        check_cc_clust <<- cc_clust
-        
+       
         # sort columns based on colnames
         data1 <- data5[,order(data5[1, ])]
         data1 <- data1[order(data1[,2]),]
@@ -1172,8 +1128,7 @@ function(input, output) {
         
         data2 <- rbind(df2[-2,], data_use)
         rownames(data2)[2] <- "Groups"
-        check_data2 <<- data2
-        
+       
         gene_id <- sub('\\.|*', '', rownames(data2))
         Groups <- sub('.*\\|', '', rownames(data2))
         
@@ -1219,11 +1174,6 @@ function(input, output) {
           samples_to_include <- sil_data()$core
           cc_clust = sil_data()$c_order
           
-          
-        check_data5 <<- data5
-        check_samples_to_include <<- samples_to_include
-        check_cc_clust <<- cc_clust
-        
         # sort columns based on colnames
         data1 <- data5[,order(data5[1, ])]
         data1 <- data1[order(data1[,2]),]
@@ -1241,7 +1191,7 @@ function(input, output) {
         
         data2 <- rbind(df2[-1,], data_use)
         #rownames(data2)[2] <- "Groups"
-        check_data2 <<- data2
+        
         
         gene_id <- sub('\\.|*', '', rownames(data2))
         Groups <- rep("A", length(gene_id))
@@ -1666,7 +1616,7 @@ function(input, output) {
       if(input$cc_cutcolden == 'TRUE') {
         cuttable <- as.data.frame(cutree(as.hclust(core_mv_hm_data()$hm[[1]]$colDendrogram), k=as.numeric(input$cc_cuttree))[as.hclust(core_mv_hm_data()$hm[[1]]$colDendrogram)$order])
         cuttable <- cbind.data.frame(rownames(cuttable), cuttable)
-        check_cuttable <<- cuttable
+        
         names(cuttable)[1] <- "Sample"
         names(cuttable)[2] <- "Cluster"
         data_l1_l2 <- core_mv_hm_data()$data_use #extracted_data2()
@@ -1945,6 +1895,7 @@ function(input, output) {
     {
       variant_data <- Variant_input()
       variant_data2 <- as.matrix(variant_data)
+      
       cc2 <- consensus_clustering(dinput=variant_data2, mK=10, rep=as.integer(input$Variant_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$Variant_dist, iL=input$Variant_hclust, fL=input$Variant_hclust)
     }
     return(list(output= cc2[["output"]][[as.integer(input$Variant_opt_k)]]$consensusClass, data= cc2[["data"]], distance=cc2[["distance"]],order= cc2[["output"]][[as.integer(input$Variant_opt_k)]]$consensusTree$order))
@@ -2087,7 +2038,6 @@ function(input, output) {
         cc.final <- coca(cc= list(cc1, cc2), type = c("V", "CNV"), opt_k= c(as.integer(input$Variant_opt_k), as.integer(input$CNV_opt_k)), coca_reps = as.integer(input$coca_pItems), clust= input$coca_hclust, dist= input$coca_dist, coca_opt_k= as.integer(input$coca_opt_k))
       }
     }
-    dev.off()
     
     return(list(output= cc.final[["output"]], data= cc.final[["data"]], distance = cc.final[["distance"]]))
     
@@ -2785,7 +2735,7 @@ function(input, output) {
   
   Sig_data_input <- reactive({
     if(input$Sig_file1 == 'Sig_Example1'){
-      d <- read.csv("data/Most_variable_extracted_Expression_withHRgroups.csv", header = T, sep  = ",", stringsAsFactors = F)
+      d <- read.csv("data/Most_variable_extracted_Expression_withHRgroups.csv", header = T, sep  = ",", stringsAsFactors = F) 
     } else if(input$Sig_file1 == 'Sig_Example2') {
       d <- read.csv("data/BRCA.Example.data_made_up.csv", header = T, sep  = ",", stringsAsFactors = F)
     } else if(input$Sig_file1 == 'load_my_own_Sig'){
@@ -2814,8 +2764,6 @@ function(input, output) {
     if(!is.null(Sig_data_input()))
     {
       data <- Sig_data_input()
-      
-      check_sig_data <<- data
       
       # sort columns based on colnames
       data <- data[,order(data[1, ])]

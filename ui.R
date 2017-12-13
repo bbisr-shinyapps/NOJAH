@@ -13,9 +13,7 @@ library(cluster) # for silhouette
 library(reshape) # for cast
 library(gridExtra)
 
-
 fluidPage(
-  
    tags$head(includeScript("google-analytics.js")),
    theme = shinytheme("spacelab"),
                 
@@ -42,12 +40,11 @@ fluidPage(
              fluidRow(
                column(2,
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                     br(), br(), br(), br(), br(), 
-                     #br(), br(), br(), br(), br(),
-                     # br(), br(), br(), br(), br(),
-                    #  br(), br(), br(), br(), br(),
-                      
+                      br(), br(), br(), br(), br(), 
+                      br(), br(), br(), br(), br(),
+                      br(), br(), br(), br(), br(), 
+                      br(), br(), br(), br(), br(),
+              conditionalPanel("input.gw_conditionedPanels == 1",            
                 wellPanel(h3("Input GW Data"),
                  selectInput("gw_file1",label= "Select an example dataset or upload your own with 'Load my own GW data.'", 
                              choices = c("Example coMMpass IA9 Expression data"= "GW_Example1", 
@@ -123,15 +120,11 @@ fluidPage(
                  
                  ),
                 
-               # br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                #br(), br(), br(), br(), br(),wellPanel(h3("Input GW Data"),
                wellPanel(h3("Download subset data"),
                          textInput("fname_subset", "Type the file name you would like to save subset data as :", value = "Subset_data"),
-                         downloadButton('downloadSubset', 'Download Subset data')),
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-              #  br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                wellPanel(h3("Subset HeatMap Input"),
+                         downloadButton('downloadSubset', 'Download Subset data'))),
+              conditionalPanel("input.gw_conditionedPanels == 2", 
+               wellPanel(h3("Subset HeatMap Input"),
                          selectInput("gw_file_1",label= "Select an pre-existing dataset or upload your own with 'Load my own subset data.'", 
                                      choices = c("Pre-existing data subset"= "GW_Example_1", 
                                                  "Load my own data" = "load_my_own_gw_subset_1")),
@@ -147,14 +140,8 @@ fluidPage(
                   conditionalPanel("input.conditionedPanels == 2",   
                                  h5(downloadLink('downloadCuttree', 'Download Column clusters after cut-tree'))),
                   conditionalPanel("input.conditionedPanels == 3", 
-                                 h5(downloadLink('downloadCuttree2', 'Download Row clusters after cut-tree')))),
-               
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(), 
-                #br(), br(), br(),
+                                 h5(downloadLink('downloadCuttree2', 'Download Row clusters after cut-tree')))) ),
+              conditionalPanel("input.gw_conditionedPanels == 3",
                 wellPanel (h3("Consensus Clustering Input"),
                 selectInput("gw_file3",label= "Select an pre-existing dataset or upload your own with 'Load my own GW data.'", 
                             choices = c("Pre-existing data subset"= "GW_Example3", 
@@ -163,12 +150,12 @@ fluidPage(
                                  fileInput('gw_file4', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
                 conditionalPanel("input.gw_file3 == 'GW_Example3'", downloadButton('download_GW_Ex3', 'Download subset Pre-existing DS'))
                ),
+              
                 conditionalPanel("input.conditionedPanels == 1", 
                 wellPanel(h3("Download Consensus Cluster Results"),
                           downloadButton("con_dl", label = "Download Consensus Cluster Results"),
-                          h6("Download may take a while. Once complete, the result pdf file will automatically open.")),
-                br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(),
+                          h6("Download may take a while. Once complete, the result pdf file will automatically open.")) )),
+              conditionalPanel("input.gw_conditionedPanels == 4",
                 wellPanel (h3("Silhouette Input"),
                            selectInput("gw_file5",label= "Select an pre-existing dataset or upload your own with 'Load my own subset data.'", 
                                        choices = c("Pre-existing data subset"= "GW_Example5", 
@@ -193,13 +180,7 @@ fluidPage(
                
                 ),
                 
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                br(), br(), br(), br(), br(), br(), br(), br(),
-               br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-               br(), br(), br(), br(), br(),
-               br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-               br(), br(), br(), br(), br(),
+              conditionalPanel("input.gw_conditionedPanels == 5",
                 conditionalPanel("input.cc_conditionedPanels == 1 | input.cc_conditionedPanels == 2 | input.cc_conditionedPanels == 3",  
                 wellPanel(h3("Core Sample based Downloads"),
                           br(), 
@@ -215,18 +196,19 @@ fluidPage(
                          
                           
                           ))
-                ),               
-                column(8, p(HTML("<p> <h3> A Genome-Wide Heatmap can be very dense. Given the limitation with the computational power required to construct a genome wide heatmap, NOJAH showcases a <a href='#gw_dend'> Genome-Wide Dendrogram </a>. </h3> <br> 
-                                 <p> <h3> <strong> Genome-Wide Heatmap Analysis is divided into four main subparts : </strong> </h3> 
-                                 <p> <h3> 1. <a href='#Boxplot'> Identify the Most Variable Features </a> <br>
-                                 <p> 2. <a href='#GW_subset_heatmap'> Construct a HeatMap for the Most Variable Features </a> <br>
-                                 <p> 3. <a href='#gw_cc'> Identify Number of Clusters and Assess Cluster Stability </a> <br>
-                                 <p> 4. <a href='#gw_core_sam'> Identify Core Samples </a> <br>
-                                 <p> Heatmap is <a href='#cc_GW_subset_heatmap'> updated </a> based on the Consensus Core Samples </h3><br> <br> <br>"
+              ) ),               
+                column(8, p(HTML("<p> <h3> A Genome-Wide Heatmap can be very dense. Given the limitation with the computational power required to construct a genome wide heatmap, NOJAH showcases a <font color = '#338AFF'> <i> Genome-Wide Dendrogram. </i> </font> </h3> <br> 
+                                 <p> <h3> <strong> <u> Genome-Wide Heatmap Analysis workflow is divided into four main subparts: </strong> </u> </h3> 
+                                 <p> <font color = '#338AFF'> <h3> 1. <i> Identify the Most Variable Features </i> <br>
+                                 <p> 2. <i> Construct a HeatMap for the Most Variable Features </i> <br>
+                                 <p> 3. <i> Identify Number of Clusters and Assess Cluster Stability </i> <br>
+                                 <p> 4. <i> Identify Core Samples </i> </font> <br>
+                                 <p> Heatmap is <i> <font color = '#338AFF'> updated</i> </font> based on the Consensus Core Samples. <br> <br>
+                                 <p> However each of these components are not dependent on each other and can be used independently. </h3> <br> <br> <br>"
                                  )),
                        
                        tags$head(tags$style(type="text/css", "
-             #loadmessage {
+                                          #loadmessage {
                                            position: fixed;
                                            bottom: 0px;
                                            right: 0px;
@@ -240,7 +222,8 @@ fluidPage(
                                            z-index: 105;
                                            }
                                            ")),
-                       
+              tabsetPanel(type = "tabs", 
+                tabPanel("Most-Variable Features",
                      h3(strong("Genome-Wide Dendrogram")),
                      plotOutput("gw_dend", height = 500),
                      h3(strong("Measures of Spread")),
@@ -248,35 +231,44 @@ fluidPage(
                      h3(strong("Identify Most Variable Features")),
                      h5(em("To see the position of your 'gene of interest', use the 'Choose Option' drop down to the right")),
                      plotlyOutput("GW_Scatter_LH"),
-                     htmlOutput("n_selected"),
-                     br(),
-                     br(),
-                    # conditionalPanel("input.conditionedPanels == 1", 
+                     htmlOutput("n_selected"), 
+                     conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1),
+                tabPanel("Heatmap",
                      h3(strong("Construct a Heatmap : Visualization of Selected Subset")),
                      tabsetPanel(type = "tabs", 
                        tabPanel("HeatMap", plotOutput("GW_subset_heatmap", height = 1200), 
                                 conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
-                       tabPanel("Column Dendrogram",plotOutput("plot1", height = 800), htmlOutput("display"), br(), DT::dataTableOutput("df"), value=2), 
-                       tabPanel("Row Dendrogram",plotOutput("plot2", height = 800), htmlOutput("display2"), br(), DT::dataTableOutput("df2"),  value =3), 
-                       id = "conditionedPanels"),
+                       tabPanel("Column Dendrogram",plotOutput("plot1", height = 800), htmlOutput("display"), br(), DT::dataTableOutput("df"), 
+                                conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
+                       tabPanel("Row Dendrogram",plotOutput("plot2", height = 800), htmlOutput("display2"), br(), DT::dataTableOutput("df2"),  
+                                conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3), 
+                       id = "conditionedPanels"), value =2),
+                tabPanel("Cluster Number and Stability",
                      h3(strong("Number of clusters and Assessing cluster stability")),
-                     plotOutput("gw_cc", height = 600),
+                     plotOutput("gw_cc", height = 600, width = 2400), 
+                     conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 3),
+                tabPanel("Core Samples",
                      h3(strong("Core samples")),
-                     plotOutput("gw_core_sam", height = 1500),
-                     #),
-                     br(), br(),
+                     plotOutput("gw_core_sam", height = 1500), 
+                     conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value= 4),
+                tabPanel("Updated Heatmap",
                      h3(strong("Updated HeatMap based on Consensus Core Samples")),
                      tabsetPanel(type = "tabs", 
                                  tabPanel("HeatMap", plotOutput("cc_GW_subset_heatmap", height = 1200), 
                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
-                                 tabPanel("Column Dendrogram",plotOutput("cc_plot1", height = 800), htmlOutput("cc_display"), br(), DT::dataTableOutput("cc_df"), value=2), 
-                                 tabPanel("Row Dendrogram",plotOutput("cc_plot2", height = 800), htmlOutput("cc_display2"), br(), DT::dataTableOutput("cc_df2"),  value =3), 
-                                 id = "cc_conditionedPanels")
+                                 tabPanel("Column Dendrogram",plotOutput("cc_plot1", height = 800), htmlOutput("cc_display"), br(), DT::dataTableOutput("cc_df"), 
+                                          conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
+                                 tabPanel("Row Dendrogram",plotOutput("cc_plot2", height = 800), htmlOutput("cc_display2"), br(), DT::dataTableOutput("cc_df2"), 
+                                          conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3), 
+                                 id = "cc_conditionedPanels"), value= 5),
+                id= "gw_conditionedPanels")
+      
                      ),
                column(2, 
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                       br(), br(), br(), br(),
+                 conditionalPanel("input.gw_conditionedPanels == 1",
                       ########## GW dendrogram options ##########
                       wellPanel(  
                       h4("Genome-Wide Dendrogram Options"),
@@ -295,10 +287,8 @@ fluidPage(
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                      br(), br(), br(),
-                    uiOutput(outputId="geneSelector", width=NULL),
-                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                      br(), br(), br(),
+                    uiOutput(outputId="geneSelector", width=NULL) ),
+                 conditionalPanel("input.gw_conditionedPanels == 2",
                     conditionalPanel("input.conditionedPanels == 1", 
                        wellPanel(  
                         ########## HeatMap Clustering options ##########
@@ -353,32 +343,26 @@ fluidPage(
                                                  numericInput("cuttree2", "Cut Row Dendrogram at:", 2))
                                 
                                 )
-                            ),
-                    br(), br(), 
+                            ) ),
+                    ##br(), br(),
+                 conditionalPanel("input.gw_conditionedPanels == 3",
                     conditionalPanel("input.conditionedPanels == 1", 
                     wellPanel(h3("Consensus Clustering Options"),
                                                selectInput("con_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson"),
                                                selectInput("con_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                                               radioButtons("con_pItems", "No. of iterations", choices = c(100, 500, 1000), selected = 100)),
+                                               radioButtons("con_pItems", "No. of iterations", choices = c(10, 100, 500, 1000), selected = 10)),
                                      
                     wellPanel(h3("Choose Optimal Number of clusters"),
                             numericInput("con_opt_k", "Optimal k is ", value = 3))
-                        ),
+                        )),
+                 conditionalPanel("input.gw_conditionedPanels == 4",
                     wellPanel(h3("Silhouette Options"),
                               conditionalPanel("input.gw_file5 == 'load_my_own_gw_subset2'",
-                                  #  numericInput("sil_opt_k", "Choose Number of clusters k: ", value = 3),
                                    selectInput("sil_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean")
-                                  # selectInput("sil_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average")
                                ),
                               sliderInput("upto_slider", "Remove Samples with Silhoutte width less than:", min = 0, max = 1.0, value = 0.07)        
-                    ),
-                    br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                    br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                    br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                    br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                    br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                    br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                    br(), br(), br(), br(), br(),
+                    ) ),
+                 conditionalPanel("input.gw_conditionedPanels == 5",
                     conditionalPanel("input.cc_conditionedPanels == 1", 
                                      wellPanel(  
                                        ########## HeatMap Clustering options ##########
@@ -431,7 +415,7 @@ fluidPage(
                                                          numericInput("cc_cuttree2", "Cut Row Dendrogram at:", 2))
                                         
                                       )
-                    ))
+                    )))
              )
               
              
@@ -474,21 +458,21 @@ fluidPage(
                           conditionalPanel("input.cPanels1 == 1",      
                             selectInput("Exp_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson"),
                             selectInput("Exp_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("Exp_pItems", "No. of iterations", choices = c(100, 500, 1000), selected = 100)),
+                            radioButtons("Exp_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 50)),
                           conditionalPanel("input.cPanels1 == 2",      
                             selectInput("Variant_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "maximum"),
                             selectInput("Variant_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("Variant_pItems", "No. of iterations", choices = c(100, 500, 1000), selected = 100)),
+                            radioButtons("Variant_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 50)),
                           conditionalPanel("input.cPanels1 == 3",      
                             selectInput("CNV_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "manhattan"),
                             selectInput("CNV_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("CNV_pItems", "No. of iterations", choices = c(100, 500, 1000), selected = 100)),
+                            radioButtons("CNV_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 50)),
                           conditionalPanel("input.cPanels1 == 4",
                             checkboxGroupInput("coca_platform","Perform CoC analysis using", choices = list("Expression"= "EXP","Variant" = "PROP", "Copy Number" = "CNV"), selected = c("EXP", "PROP", "CNV")),
                             h6("Select atleast two platforms to run CoC analysis"),
                             selectInput("coca_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean"),
                             selectInput("coca_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("coca_pItems", "No. of iterations", choices = c(100, 500, 1000), selected = 100))
+                            radioButtons("coca_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 50))
                           
                       ),
                       conditionalPanel("input.cPanels1 == 4",
@@ -640,9 +624,12 @@ fluidPage(
                column(8,
                       tabsetPanel(type = "tabs", 
                                   #tabPanel("ReadMe", htmlOutput("ReadMe"), tableOutput("Eg"), htmlOutput("Caption1"), tableOutput("Eg2"), htmlOutput("Caption2"), htmlOutput("blurp"), value = 1),
-                                  tabPanel("HeatMap", plotOutput("Sig_plot", width = 1300, height = 1300 ), value=2), 
-                                  tabPanel("Column Dendrogram", plotOutput("Sig_plot1", height= 600, width = 1500), htmlOutput("Sig_display"), br(), DT::dataTableOutput("Sig_df"), htmlOutput("Sig_pv"), htmlOutput("Sig_pvalue"),  value=3), 
-                                  tabPanel("Row Dendrogram", plotOutput("Sig_plot2", height = 800, width = 1500), htmlOutput("Sig_display2"), br(), DT::dataTableOutput("Sig_df2"), htmlOutput("Sig_pv2"), htmlOutput("Sig_pvalue2"),  value =4),
+                                  tabPanel("HeatMap", plotOutput("Sig_plot", width = 1300, height = 1300 ), 
+                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
+                                  tabPanel("Column Dendrogram", plotOutput("Sig_plot1", height= 600, width = 1500), htmlOutput("Sig_display"), br(), DT::dataTableOutput("Sig_df"), htmlOutput("Sig_pv"), htmlOutput("Sig_pvalue"),  
+                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=3), 
+                                  tabPanel("Row Dendrogram", plotOutput("Sig_plot2", height = 800, width = 1500), htmlOutput("Sig_display2"), br(), DT::dataTableOutput("Sig_df2"), htmlOutput("Sig_pv2"), htmlOutput("Sig_pvalue2"),  
+                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =4),
                                   id = "cPanels2")
                       ),
                column(2,
