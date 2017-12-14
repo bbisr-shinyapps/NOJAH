@@ -31,6 +31,20 @@ You only need to do this once.
 Then, you may run NOJAH any time in an R session as follows.
 ``` R
 library(shiny)
+library(shinythemes)
+library(plotly)
+library(RColorBrewer)
+library(gplots)
+library(gdata)
+library(plyr)
+library(DT)
+require(dendextend)
+library(colourpicker)
+library(ConsensusClusterPlus)
+library(cluster) # for silhouette
+library(reshape) # for cast
+library(gridExtra)
+
 runGitHub("NOJAH", "manalirupji")
 ```
 
