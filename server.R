@@ -965,7 +965,7 @@ function(input, output) {
      
      sil = silhouette_plot2(data_use= consen()[["data"]], opt_k=as.integer(input$con_opt_k), res=consen()[["output"]], dist = consen()[["distance"]], upto_width= as.numeric(input$upto_slider), cols = df)
      
-     colors = c("cyan", "khaki1", "pink", "plum3", "purple", "darkgreen", "hotpink","brown", "darkorchid2",  "maroon")
+     colors = c("cyan", "khaki1", "pink", "plum3", "mediumaquamarine", "coral", "hotpink","brown", "darkorchid2",  "maroon")
      par(mfrow = c(1, 2))
      plot(sil[["sk2"]],  main = "Silhouette Plot of 'ALL' Samples", cex.names=0.6, max.strlen= 8, col = sil[["sk2.col"]])
      plot(sil[["sk3"]],  main = "Silhouette Plot of 'CORE' Samples", cex.names=0.6, max.strlen= 8, col = colors[1:sil[["k"]]]) #sil[["sk3.col"]]
@@ -1038,16 +1038,20 @@ function(input, output) {
         #sil_data()
         if(input$gw_file5 == "GW_Example5") {
           
+          check_consen <<- consen()
+          
           data = consen()$data
           sample = colnames(consen()$data)
+          check_sample <<- sample
           
           colors = mv_hm_data()$cc1
+          check_colors <<- colors
           df = cbind.data.frame(sample, colors, stringsAsFactors = F)
           colnames(df) <- c("Sample","colors")
           
           sil = silhouette_plot2(data_use= consen()[["data"]], opt_k=as.integer(input$con_opt_k), res=consen()[["output"]], dist = consen()[["distance"]], upto_width= as.numeric(input$upto_slider), cols = df)
           
-          colors = c("cyan", "khaki1", "pink", "plum3", "purple", "darkgreen", "hotpink","brown", "darkorchid2",  "maroon")
+          colors = c("cyan", "khaki1", "pink", "plum3", "mediumaquamarine", "coral", "lightpink","steelblue", "darkorchid2",  "yellowgreen", "violetred")
           par(mfrow = c(1, 2))
           plot(sil[["sk2"]],  main = "Silhouette Plot of 'ALL' Samples", cex.names=0.6, max.strlen= 8, col = sil[["sk2.col"]])
           plot(sil[["sk3"]],  main = "Silhouette Plot of 'CORE' Samples", cex.names=0.6, max.strlen= 8, col = colors[1:sil[["k"]]]) #sil[["sk3.col"]]
@@ -1074,7 +1078,7 @@ function(input, output) {
          
           sil = silhouette_plot3(data_use= mv_data2, opt_k= k, res= c_order2, dist = input$sil_dist, upto_width= as.numeric(input$upto_slider), cols = c("orange", "darkblue", "black", "maroon", "violet", "plum2")[1:k])
           
-          colors = c("cyan", "khaki1", "pink", "plum3", "purple", "darkgreen", "hotpink","brown", "darkorchid2",  "maroon")
+          colors = c("cyan", "khaki1", "pink", "plum3", "mediumaquamarine", "coral", "lightpink","steelblue", "darkorchid2",  "yellowgreen", "violetred")
           par(mfrow = c(1, 2))
           plot(sil[["sk2"]],  main = "Silhouette Plot of 'ALL' Samples", cex.names=0.6, max.strlen= 8, col = c("orange", "darkblue", "black", "maroon", "violet", "plum2")[1:k])
           plot(sil[["sk3"]],  main = "Silhouette Plot of 'CORE' Samples", cex.names=0.6, max.strlen= 8, col = c("orange", "darkblue", "black", "maroon", "violet", "plum2")[1:k]) #sil[["sk3.col"]]
@@ -1110,17 +1114,20 @@ function(input, output) {
         
         if(input$gw_file5 == "GW_Example5") {
         data5 <- extracted_data2()
-        
+       
         samples_to_include <- sil_data()$core
-      
+        check_samples_to_include <<- samples_to_include
+
         cc_clust <- as.data.frame(consen()$output)
         colnames(cc_clust) <- "Cluster"
         cc_clust$Sample <- rownames(cc_clust)
+        check_cc_clust <<- cc_clust
        
         # sort columns based on colnames
         data1 <- data5[,order(data5[1, ])]
         data1 <- data1[order(data1[,2]),]
         data_use = data1[, colnames(data1) %in% samples_to_include]
+        rownames(data_use) <- paste(data1[,1], data1[,2], sep = "|")
         
         cc_clust2 <- cc_clust[cc_clust$Sample %in% samples_to_include, ]
         cc_clust3 <- cc_clust2[match(colnames(data_use), cc_clust2$Sample),] ######
@@ -1128,12 +1135,17 @@ function(input, output) {
         
         data2 <- rbind(df2[-2,], data_use)
         rownames(data2)[2] <- "Groups"
+        
+        data3 <- data2[, order(data2[1,])]
        
-        gene_id <- sub('\\.|*', '', rownames(data2))
+        gene_id <- sub('\\|.*', '', rownames(data2))
         Groups <- sub('.*\\|', '', rownames(data2))
         
-        data3 <- data.frame(gene_id, Groups, data2)
+        data3 <- data.frame(gene_id, Groups, data3)
         data3[1:2,c(1:2)] <-  " "
+        
+        #data3 <- as.data.frame(data3[,order(data3[1,3:ncol(data3)])])
+        check_data3 <<- data3
         
         ### gene names, column name as gene
         gene <- as.character(data3$gene_id)
@@ -1141,6 +1153,7 @@ function(input, output) {
         row.groups <- as.character(as.vector(data3[(4-1): nrow(data3),2])) #as.character(as.vector(data3[(6-1):nrow(data3),2])) 
         row.groups.name <- names(table(row.groups))
         number.row.groups <- length(row.groups.name)
+        
         
         ### column groups
         col.groups <- as.character(as.vector(data3[1,]))
@@ -1205,6 +1218,7 @@ function(input, output) {
         row.groups <- as.character(as.vector(data3[(3-1): nrow(data3),2])) #as.character(as.vector(data3[(6-1):nrow(data3),2])) 
         row.groups.name <- names(table(row.groups))
         number.row.groups <- length(row.groups.name)
+      
         
         ### column groups
         col.groups <- as.character(as.vector(data3[1,]))
@@ -1238,6 +1252,8 @@ function(input, output) {
         ## Set color palette
         col1 <- colorRampPalette(c(input$cc_low,input$cc_mid,input$cc_high))(299)
         colors <- c(seq(-1,-0.2,length=100),seq(-0.2,0.2,length=100),seq(0.2,1,length=100)) # check slider
+        
+        check_number.row.groups = number.row.groups
         
         ### Color vector for columns
         if(number.col.groups==1) { 
@@ -1352,7 +1368,7 @@ function(input, output) {
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+1:table(col.groups)[[6]]] <- 'coral'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'lightpink'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+1:table(col.groups)[[8]]] <- 'steelblue'
-          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+table(col.groups)[[8]]+1:table(col.groups)[[9]]] <- 'darkorchid2'
+          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+table(col.groups)[[8]]+1:table(col.groups)[[9]]] <- 'yellowgreen'
           colbars2 <- if(n.colbar_data ==1) as.matrix(cc1) else as.matrix(cbind(cc1, colbars_gw(df2 = colbar_data)[[1]]))
           colnames(colbars2)[1] <- "CC"
           number.colbar.class <- if(n.colbar_data ==1) NULL else  colbars_gw(df2 = colbar_data)[[2]]
@@ -1388,6 +1404,7 @@ function(input, output) {
           number.rowbar.class <- if(n.rowbar_data ==1) NULL else colbars_gw(df2 = rowbar_data)[[2]]
           names.rowbar.class <- if(n.rowbar_data ==1) NULL else colbars_gw(df2 = rowbar_data)[[3]]
           colors_used2 <- if(n.rowbar_data ==1) NULL else colbars_gw(df2 = rowbar_data)[[4]]
+          check_rowbars2 <<- rowbars2
         } else if(number.row.groups==2) {
           cell2 <- c(rep(row.groups.name[1], table(row.groups)[[1]]), rep(row.groups.name[2],table(row.groups)[[2]]))
           cc2 <- rep(col1[50], length(cell2))
@@ -1765,6 +1782,75 @@ function(input, output) {
     
     
    
+    output$dlCoreSubset <- downloadHandler(
+      filename = function() {
+        paste(paste(input$cc_fname_subset, input$cc_hclust, "clustering", input$cc_dist, "distance", sep="_"), '.csv', sep='') 
+      },
+      content = function(con) {
+        
+        if(input$gw_file5 == "GW_Example5") {
+          
+          data5 <- extracted_data2()
+          samples_to_include <- sil_data()$core
+          
+          cc_clust <- as.data.frame(consen()$output)
+          colnames(cc_clust) <- "Cluster"
+          cc_clust$Sample <- rownames(cc_clust)
+          
+          # sort columns based on colnames
+          data1 <- data5[,order(data5[1, ])]
+          data1 <- data1[order(data1[,2]),]
+          data_use = data1[, colnames(data1) %in% samples_to_include]
+          rownames(data_use) <- paste(data1[,1], data1[,2], sep = "|")
+          
+          cc_clust2 <- cc_clust[cc_clust$Sample %in% samples_to_include, ]
+          cc_clust3 <- cc_clust2[match(colnames(data_use), cc_clust2$Sample),] ######
+          df2 <- t(cc_clust3)
+          
+          data2 <- rbind(df2[-2,], data_use)
+          rownames(data2)[2] <- "Groups"
+          
+          gene_id <- sub('\\|.*', '', rownames(data2))
+          Groups <- sub('.*\\|', '', rownames(data2))
+          
+          data3 <- data.frame(gene_id, Groups, data2)
+          data3[1:2,c(1:2)] <-  " "
+        
+        } else if(input$gw_file5 == "load_my_own_gw_subset2" & input$gw_file7 == "load_my_own_gw_subset3") {
+          data5 = sil_data()$data
+          samples_to_include <- sil_data()$core
+          cc_clust = sil_data()$c_order
+          
+          # sort columns based on colnames
+          data1 <- data5[,order(data5[1, ])]
+          data1 <- data1[order(data1[,2]),]
+          data_use = data1[, colnames(data1) %in% samples_to_include]
+          
+          
+          # sort columns based on colnames
+          data1 <- data5[,order(data5[1, ])]
+          data1 <- data1[order(data1[,2]),]
+          data_use = data1[, colnames(data1) %in% samples_to_include]
+          
+          cc_clust2 <- cc_clust[cc_clust$Sample %in% samples_to_include, ]
+          cc_clust3 <- cc_clust2[match(colnames(data_use), cc_clust2$Sample),] ######
+          df2 <- t(cc_clust3)
+          
+          data2 <- rbind(df2[-1,], data_use)
+          #rownames(data2)[2] <- "Groups"
+          
+          
+          gene_id <- sub('\\.|*', '', rownames(data2))
+          Groups <- rep("A", length(gene_id))
+          
+          data3 <- data.frame(gene_id, Groups, data2)
+          data3[1,c(1:2)] <-  " "
+        }
+        
+      
+        
+      write.csv(data3, con, quote=F, row.names = F)    
+    })
     
 
 ###########################################################################

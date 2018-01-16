@@ -185,7 +185,7 @@ fluidPage(
                 wellPanel(h3("Core Sample based Downloads"),
                           br(), 
                           textInput("cc_fname_subset", "Type the file name you would like to save subset data as :", value = "Core_Subset_data"),
-                          downloadButton('cc_downloadSubset', 'Download Subset data'),
+                          downloadButton('dlCoreSubset', 'Download Subset data'),
                           br(), br(),
                           textInput("cc_fname_HM", "Save HeatMap as :", value = "Core_subset_HM"),
                           downloadButton('cc_downloadHM', 'Download HM'),
