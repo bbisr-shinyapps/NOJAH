@@ -8,7 +8,7 @@ colbars_gw <- function(df2, colscheme = 2){
   {  df3 <- c(df3,as.character(df2[,i])) }
   
   no.of.levels <- length(unique(df3))
-  level.names <- unique(df3)
+  level.names <- sort(unique(df3))
   
   if(colscheme != 2)
   { colors <- topo.colors(no.of.levels)
