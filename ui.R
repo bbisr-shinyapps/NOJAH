@@ -599,11 +599,11 @@ fluidPage(
                column(2,
                       wellPanel(h3("Input Data to test significance of clusters "),
                                 selectInput("Sig_file1",label= "Select an example dataset or upload your own with 'Load my own GW data.'", 
-                                            choices = c("Example Exp Data"="Sig_Example1","Example Meth Data"="Sig_Example2", "Load my own data" = "load_my_own_Sig")),
+                                            choices = c("Example Exp Data"="Sig_Example1", "Load my own data" = "load_my_own_Sig")),
                                 conditionalPanel("input.Sig_file1 == 'load_my_own_Sig'",
                                                  fileInput('Sig_file2', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
-                                conditionalPanel("input.Sig_file1 == 'Sig_Example1'", downloadButton('download_Sig_Ex1', 'Download Example DataSet')),
-				 conditionalPanel("input.Sig_file1 == 'Sig_Example2'", downloadButton('download_Sig_Ex2', 'Download Example DataSet'))
+                                conditionalPanel("input.Sig_file1 == 'Sig_Example1'", downloadButton('download_Sig_Ex1', 'Download Example DataSet'))
+				 #conditionalPanel("input.Sig_file1 == 'Sig_Example2'", downloadButton('download_Sig_Ex2', 'Download Example DataSet'))
 
                       ),
                       wellPanel(h4("Select Data Rows and column start"),

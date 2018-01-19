@@ -1051,7 +1051,7 @@ function(input, output) {
           
           sil = silhouette_plot2(data_use= consen()[["data"]], opt_k=as.integer(input$con_opt_k), res=consen()[["output"]], dist = consen()[["distance"]], upto_width= as.numeric(input$upto_slider), cols = df)
           
-          colors = c("cyan", "khaki1", "pink", "plum3", "mediumaquamarine", "coral", "lightpink","steelblue", "darkorchid2",  "yellowgreen", "violetred")
+          colors = c("cyan", "khaki1", "pink", "plum3", "mediumaquamarine", "coral", "hotpink","steelblue", "darkorchid2",  "yellowgreen", "violetred")
           par(mfrow = c(1, 2))
           plot(sil[["sk2"]],  main = "Silhouette Plot of 'ALL' Samples", cex.names=0.6, max.strlen= 8, col = sil[["sk2.col"]])
           plot(sil[["sk3"]],  main = "Silhouette Plot of 'CORE' Samples", cex.names=0.6, max.strlen= 8, col = colors[1:sil[["k"]]]) #sil[["sk3.col"]]
@@ -1335,7 +1335,7 @@ function(input, output) {
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+1:table(col.groups)[[4]]] <- 'plum3'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+1:table(col.groups)[[5]]] <- 'aquamarine'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+1:table(col.groups)[[6]]] <- 'coral'
-          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'lightpink'
+          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'hotpink'
           colbars2 <- if(n.colbar_data ==1) as.matrix(cc1) else as.matrix(cbind(cc1, colbars_gw(df2 = colbar_data)[[1]]))
           colnames(colbars2)[1] <- "CC"
           number.colbar.class <- if(n.colbar_data ==1) NULL else colbars_gw(df2 = colbar_data)[[2]]
@@ -1350,7 +1350,7 @@ function(input, output) {
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+1:table(col.groups)[[4]]] <- 'plum3'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+1:table(col.groups)[[5]]] <- 'aquamarine'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+1:table(col.groups)[[6]]] <- 'coral'
-          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'lightpink'
+          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'hotpink'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+1:table(col.groups)[[8]]] <- 'steelblue'
           colbars2 <- if(n.colbar_data ==1) as.matrix(cc1) else as.matrix(cbind(cc1, colbars_gw(df2 = colbar_data)[[1]]))
           colnames(colbars2)[1] <- "CC"
@@ -1366,7 +1366,7 @@ function(input, output) {
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+1:table(col.groups)[[4]]] <- 'plum3'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+1:table(col.groups)[[5]]] <- 'aquamarine'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+1:table(col.groups)[[6]]] <- 'coral'
-          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'lightpink'
+          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'hotpink'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+1:table(col.groups)[[8]]] <- 'steelblue'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+table(col.groups)[[8]]+1:table(col.groups)[[9]]] <- 'yellowgreen'
           colbars2 <- if(n.colbar_data ==1) as.matrix(cc1) else as.matrix(cbind(cc1, colbars_gw(df2 = colbar_data)[[1]]))
@@ -1383,7 +1383,7 @@ function(input, output) {
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+1:table(col.groups)[[4]]] <- 'plum3'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+1:table(col.groups)[[5]]] <- 'aquamarine'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+1:table(col.groups)[[6]]] <- 'coral'
-          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'lightpink'
+          cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+1:table(col.groups)[[7]]] <- 'hotpink'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+1:table(col.groups)[[8]]] <- 'steelblue'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+table(col.groups)[[8]]+1:table(col.groups)[[9]]] <- 'yellowgreen'
           cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+table(col.groups)[[4]]+table(col.groups)[[5]]+table(col.groups)[[6]]+table(col.groups)[[7]]+table(col.groups)[[8]]+table(col.groups)[[9]]+1:table(col.groups)[[10]]] <- 'violetred'
@@ -1503,13 +1503,13 @@ function(input, output) {
           } else if(number.col.groups==6) {  
             legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==7) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==8) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==9) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue", "yellowgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue", "yellowgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==10) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9], col.groups.name[10])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue", "yellowgreen", "violetred"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9], col.groups.name[10])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue", "yellowgreen", "violetred"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           }
           
           if(number.row.groups==1) {
@@ -1550,13 +1550,13 @@ function(input, output) {
           } else if(number.col.groups==6) {  
             legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==7) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==8) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==9) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue", "yellowgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue", "yellowgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           } else if(number.col.groups==10) {  
-            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9], col.groups.name[10])), col = c("darkblue", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue", "yellowgreen", "violetred"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
+            legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9], col.groups.name[10])), col = c("darkblue", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue", "yellowgreen", "violetred"), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
           }
           
           if(number.row.groups==1) {
@@ -1614,13 +1614,13 @@ function(input, output) {
       } else if(core_mv_hm_data()$number.col.groups==6) {  
         legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
       } else if(core_mv_hm_data()$number.col.groups==7) {  
-        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
+        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
       } else if(core_mv_hm_data()$number.col.groups==8) {  
-        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7], core_mv_hm_data()$col.groups.name[8])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
+        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7], core_mv_hm_data()$col.groups.name[8])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
       } else if(core_mv_hm_data()$number.col.groups==9) {  
-        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7], core_mv_hm_data()$col.groups.name[8], core_mv_hm_data()$col.groups.name[9])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue", "yellowgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
+        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7], core_mv_hm_data()$col.groups.name[8], core_mv_hm_data()$col.groups.name[9])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue", "yellowgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
       } else if(core_mv_hm_data()$number.col.groups==10) {  
-        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7], core_mv_hm_data()$col.groups.name[8], core_mv_hm_data()$col.groups.name[9], core_mv_hm_data()$col.groups.name[10])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "lightpink", "steelblue", "yellowgreen", "violetred"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
+        legend("topright", legend = paste(c(core_mv_hm_data()$col.groups.name[1], core_mv_hm_data()$col.groups.name[2], core_mv_hm_data()$col.groups.name[3], core_mv_hm_data()$col.groups.name[4], core_mv_hm_data()$col.groups.name[5], core_mv_hm_data()$col.groups.name[6], core_mv_hm_data()$col.groups.name[7], core_mv_hm_data()$col.groups.name[8], core_mv_hm_data()$col.groups.name[9], core_mv_hm_data()$col.groups.name[10])), col = c("cyan", "khaki1", "pink", "plum3", "aquamarine", "coral", "hotpink", "steelblue", "yellowgreen", "violetred"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$cc_sizeClable)
       }
     })
     
@@ -2822,8 +2822,8 @@ function(input, output) {
   Sig_data_input <- reactive({
     if(input$Sig_file1 == 'Sig_Example1'){
       d <- read.csv("data/Most_variable_extracted_Expression_withHRgroups.csv", header = T, sep  = ",", stringsAsFactors = F) 
-    } else if(input$Sig_file1 == 'Sig_Example2') {
-      d <- read.csv("data/BRCA.Example.data_made_up.csv", header = T, sep  = ",", stringsAsFactors = F)
+    #} else if(input$Sig_file1 == 'Sig_Example2') {
+      #d <- read.csv("data/BRCA.Example.data_made_up.csv", header = T, sep  = ",", stringsAsFactors = F)
     } else if(input$Sig_file1 == 'load_my_own_Sig'){
       inFile <- input$Sig_file2
       if (is.null(inFile))
@@ -3470,8 +3470,8 @@ function(input, output) {
             {
               if(input$Sig_file5 == 'Sig_Exp.Example2') {
                 s_data <- readRDS("data/CoMMpassIA9_GW_Expression_data.rds")
-              } else if(input$Sig_file5 == 'Sig_Meth.Example2') {
-                s_data <- readRDS("data/Meth27K.GW.BRCA.Example.data.rds")
+              #} else if(input$Sig_file5 == 'Sig_Meth.Example2') {
+                #s_data <- readRDS("data/Meth27K.GW.BRCA.Example.data.rds")
               } else {
                 inFile3 <- input$Sig_file6
                 if (is.null(inFile3))
