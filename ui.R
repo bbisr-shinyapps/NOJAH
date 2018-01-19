@@ -686,7 +686,7 @@ fluidPage(
                                          conditionalPanel("input.cPanels2==3 & input.Sig_cutcolden == 'TRUE'",
                                                           radioButtons("Sig_pvalue_cal", "Assess Gene set significance in separation of specimens into 2 clusters?:", c("No" = FALSE, "Yes" = TRUE), inline = TRUE)),
                                          conditionalPanel("input.cPanels2==3 & input.Sig_cutcolden == 'TRUE' & input.Sig_pvalue_cal == 'TRUE'" , 
-                                                          selectInput("Sig_file3", label= "Select a dataset or upload your own with 'Load my own data.'", choices = c("Exp Sampling Data" ="Sig_Exp.Example","Meth Sampling Data" ="Sig_Meth.Example", "Load my own sampling data" = "Sig_load_my_own_s_data"))),
+                                                          selectInput("Sig_file3", label= "Select a dataset or upload your own with 'Load my own data.'", choices = c("Exp Sampling Data" ="Sig_Exp.Example", "Load my own sampling data" = "Sig_load_my_own_s_data"))),
                                          conditionalPanel("input.cPanels2==3 & input.Sig_file3 == 'Sig_load_my_own_s_data'",
                                                           fileInput('Sig_file4', 'Choose file to upload to sample from to estimate significance of separation (Maximum size 100 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))) ,
                                          conditionalPanel("input.cPanels2==3 & input.Sig_cutcolden == 'TRUE' & input.Sig_pvalue_cal == 'TRUE'", 
