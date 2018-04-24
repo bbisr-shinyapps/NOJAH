@@ -1,27 +1,30 @@
 # NOJAH
 NOt Just Another Heatmap
 
-This interactive web application: NOt Just Another Heatmap (NOJAH) is developed in R with Shiny to
+This interactive web application: NOt Just Another Heatmap (NOJAH) is developed in R with Shiny to provide comprehensive workflows to
 
 
-1) Perform genome wide analysis of cancer genomic data sets 
-2) Provide visualization, analysis and download of MMRF CoMMpass Expression, Variant and CNV data with Cluster of Cluster Analysis 
-3) Perform significance of cluster analysis using a robust bootstrap approach. 
+1) Perform Genome-Wide Heatmap (GWH) analysis of cancer genomic data sets 
+2) Perform Cluster results Cluster (Crc) analysis for upto three genomic platforms  
+3) Perform Significance of Cluster (SoC) analysis using a robust bootstrap approach
 
-The goal of this tool is to provide a one stop shop to analyze Genome Wide data or CoMMpass data or perform genomic analysis on their own data.
+The goal of this tool is to provide a one stop shop to perform genomic analyses. It helps users extract the top most variable gene sets from Genome-Wide data, estimated the optimal number of clusters, identify a core subset of samples on their own data. This tool is not restricted to expression data but can use genomic data of any type: e.g. Variant proportions, methylation, copy number segmentation mean values, etc. 
 
-This tool can be accessed using http://shinygispa.winship.emory.edu/NOJAH/.
+Individual platform data from expression, methylation, copy number for the same samples (in the same order) in each platform can be integrated in the combined results clustering workflow. Typically, the most variable gene/variant/cpg sites subset from each platfrom is used as input. The clustering results from each platform are combined for a second level clustering analysis using the ConsensusClusterPlus bioconductor package. 
 
-For those interested in heatmap analysis, using the Significane of cluster analysis tab, NOJAH lets you generate a HeatMap with only the minimum knowledge of heatmaps and minimal coding experience. The user may upload their own data or use the provided coMMPass expression or TCGA BRCA RNASeq Expression example data to generate the HeatMap using any distance or clustering method of their choice. Along with the HeatMap, the column and row dendrograms are displayed individually in separate tabs. If you wish to know the samples within each cluster, this information can be downloaded using the cutree download button inside the row/column dendrogram tab. The novelty about this app is that it is highly reproducible and provides minimum information required to reproduce the heatmaps.
+For those interested in heatmap analysis, using the Significane of cluster analysis tab, NOJAH lets you generate a HeatMap with only the minimum knowledge of heatmaps and minimal coding experience. The user may upload their own data or use the example TCGA Breast Camcer RNASeq Expression or coMMPass expression data to generate the HeatMap using any distance or clustering method of their choice. Along with the HeatMap, the column and row dendrograms are displayed individually in separate tabs. If you wish to know the samples within each cluster, this information can be downloaded using the cutree download button inside the row/column dendrogram tab. The novelty about this app is that it is highly reproducible and provides minimum information required to reproduce the heatmaps.
 
-For those interested in running NOJAH using Rstudio,
+This tool can be accessed using http://bbisr.shinyapps.winship.emory.edu/NOJAH/.
+
+
+For large datasets, we advise using the command line version of NOJAH. For running NOJAH using Rstudio,
 
 #### INSTALLATION
 Firstly, you should have the most recent version of R or RStudio.
 Next install required packages. Cut and paste what's below in an R session.
 
 ``` R
-install.packages(c("shiny", "shinythemes", "plotly", "gplots", "gdata", "RColorBrewer", "ggplot2", "gdata", "plyr", "dendextend", "DT", "gridExtra", "matrixStats", "reshape", "cluster"))
+install.packages(c("shiny", "shinythemes", "plotly", "RColorBrewer", "gplots", "gdata",  "plyr",  "DT", "ggplot2",  "dendextend", "colourpicker", "cluster", "reshape", "gridExtra", "DiagrammeR", "changepoint", "rhandsontable", "matrixStats"))
 source("http://bioconductor.org/biocLite.R")
 biocLite("impute")
 biocLite("ConsensusClusterPlus")
@@ -44,15 +47,19 @@ library(ConsensusClusterPlus)
 library(cluster) # for silhouette
 library(reshape) # for cast
 library(gridExtra)
+library(DiagrammeR)
+library(changepoint)
+library(rhandsontable)
+library(ggplot2)
 
-runGitHub("NOJAH", "manalirupji")
+runGitHub("NOJAH", "bbisr-shinyapps")
 ```
 
 It may take upto several minutes for the webpage to show in your browser depending on your computer.
 
 #### INPUT DATA REQUIREMENTS
 
-Data should be input as a .txt or .xlsx or .csv file. The first two rows of the data file have information about the patients/specimens and their response/subtype; all remaining rows have gene expression data, one row per gene. In the case of Microarray gene expression data in which there are several probes corresponding to a single gene, a unique identifier would need to be created to separately identify each probe such as, 'Gene 1_p1', 'Gene1_p2' indicating Gene 1 has two probes. The columns represent the different experimental samples. A maximum of up to 10 different sample groups and 6 different gene groups may be used with this tool.
+Data should be input as a TXT or a CSV file. The first two rows of the data file have information about the patients/specimens and their response/subtype; all remaining rows have gene expression data, one row per gene. In the case of Microarray gene expression data in which there are several probes corresponding to a single gene, a unique identifier would need to be created to separately identify each probe such as, 'Gene 1_p1', 'Gene1_p2' indicating Gene 1 has two probes. The columns represent the different experimental samples. A maximum of up to 10 different sample groups and 6 different gene groups may be used with this tool.
 
 ##### DATA FORMAT
 
