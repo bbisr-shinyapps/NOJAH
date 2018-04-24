@@ -1,4 +1,5 @@
-silhouette_plot2 <- function(data_use, opt_k, res, dist, upto_width, cols = cols){
+sil_function <- function(data_use, opt_k, res, dist, percen, cols = cols) {
+  
   rownames(data_use) <- NULL
   if(dist == "pearson" | dist == "spearman")
   { dt = as.dist(1-cor(data_use,method=dist))  }
@@ -27,31 +28,31 @@ silhouette_plot2 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
   m0.1 <- cbind(m0.1,sil_width_ordered )
   neg <- list()
   
-  
   for(i in 1:opt_k) {
     clust <- m0.1[m0.1$Cluster == i,]
-    neg[[i]] <- ifelse(clust$sil_width < upto_width[[i]], 1, 2)
+    neg[[i]] <- ifelse(clust$sil_width < quantile(clust$sil_width, percen[[i]]/100), 1, 2)
   }
-  
   neg2 <- unlist(neg)
   
   m0.1 <- cbind(m0.1, neg2)
   m0.1 <- cbind(m0.1, order2 = 1:nrow(m0.1))
   
+  #neg_sil_index <- which(sk2[, "sil_width"] < quantile(sk2[,3], percen/100) )
   neg_sil_index <- which(m0.1[, "neg2"] == 1)
- 
+  
   res3 = m0.1[!(m0.1$order2 %in% neg_sil_index), ]
   m <- merge(res3, cols, by = "Sample", sort = F)
   res4 <- m[,2]
   
-  data_use2 <- data_use[, (colnames(data_use) %in% m$Sample)]
+  data_use2 = data_use[, colnames(data_use) %in% m$Sample]
   data_use2 <- data_use2[, match(m$Sample, colnames(data_use2))]
-
+  check_data_use2 <<- data_use2
+  
   if(dist == "pearson" | dist == "spearman")
-    { dt4 = as.dist(1-cor(data_use2,method=dist))  }
-    else 
-    { dt4 = dist(t(data_use2), method = dist) }
- 
+  { dt4 = as.dist(1-cor(data_use2,method=dist))  }
+  else 
+  { dt4 = dist(t(data_use2), method = dist) }
+  
   sk3   <- silhouette(res4, dt4)
   rownames(sk3) = rownames(dt4)
   
@@ -63,6 +64,7 @@ silhouette_plot2 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
   check_sk2.col <<- m0$colors
   check_res3 <<- res3
   
-  return(list(sk2= sk2, sk3= sk3, sk2.col = m0.1$colors, sk3.col = m$colors.x, core.samples = res3$Sample, k = length(unique(res3$Cluster))))
+  return(list(sk2= sk2, sk3= sk3, sk2.col = m0.1$colors, sk3.col = m$colors, core.samples = res3$Sample, k = length(unique(res3$Cluster))))
   
+ 
 }
