@@ -12,6 +12,11 @@ library(ConsensusClusterPlus)
 library(cluster) # for silhouette
 library(reshape) # for cast
 library(gridExtra)
+library(DiagrammeR)
+library(changepoint)
+library(rhandsontable)
+library(matrixStats)
+library(ggplot2)
 
 fluidPage(
    tags$head(includeScript("google-analytics.js")),
@@ -26,17 +31,17 @@ fluidPage(
                column(8, offset = 2, 
                       p("This interactive web application: NOt Just Another Heatmap (NOJAH) is developed in R with Shiny to"),
                       br(),
-                      em("1) Perform genome wide analysis of cancer genomic data sets"),
+                      em("1) Perform genome-wide heatmap (GWH) analysis of cancer genomic data sets"),
                       br(),
-                      em("2) Provide visualization, analysis and download of MMRF CoMMpass Expression, Variant and CNV data with Cluster of Cluster Analysis"),
+                      em("2) Perform Cluster results Cluster (CrC) Analysis for up to three different data type."),
                       br(),
-                      em("3) Perform significance of cluster analysis using a robust bootstrap approach."), 
+                      em("3) Perform Significance of Cluster (SoC) Analysis using a robust bootstrap approach"), 
                       br(),
                       br(),
-                      "The goal of this tool is to provide a one stop shop to analyze Genome Wide data or CoMMpass data or perform genomic analysis on their own data.",
+                      "The goal of this tool is to provide a one stop shop to perform genomic analyses.",
                       htmlOutput("ReadMe"), tableOutput("Eg"), htmlOutput("Caption1"), tableOutput("Eg2"), htmlOutput("Caption2")
                       ))),    
-    tabPanel("Genome-Wide Heatmap Analysis",
+    tabPanel("Genome-Wide Heatmap (GWH) Analysis",
              fluidRow(
                column(2,
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
@@ -47,26 +52,26 @@ fluidPage(
               conditionalPanel("input.gw_conditionedPanels == 1",            
                 wellPanel(h3("Input GW Data"),
                  selectInput("gw_file1",label= "Select an example dataset or upload your own with 'Load my own GW data.'", 
-                             choices = c("Example coMMpass IA9 Expression data"= "GW_Example1", 
-                                         "Example TCGA BRCA Exp Data"="GW_Example2", 
+                             choices = c("Example TCGA BRCA Exp Data"="GW_Example1", 
+                                         "Example coMMpass IA9 Expression data"= "GW_Example2", 
                                          "Load my own data" = "load_my_own_gw")),
                  conditionalPanel("input.gw_file1 == 'load_my_own_gw'",
                                   fileInput('gw_file2', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
-                 conditionalPanel("input.gw_file1 == 'GW_Example1'", downloadButton('download_GW_Ex1', 'Download GW CoMMPass Expression DS')),
-                 conditionalPanel("input.gw_file1 == 'GW_Example2'", downloadButton('download_GW_Ex2', 'Download GW TCGA BRCA Expression DataSet'))
+                 conditionalPanel("input.gw_file1 == 'GW_Example2'", downloadButton('download_GW_Ex2', 'Download GW CoMMPass Expression DS')),
+                 conditionalPanel("input.gw_file1 == 'GW_Example1'", downloadButton('download_GW_Ex1', 'Download GW TCGA BRCA Expression DataSet'))
                  
                  ),
                 br(), br(), br(), br(), br(), br(), br(), br(), 
                 br(), br(), br(), br(), br(),
                 wellPanel(h3("Data Subsetting"),
-                 checkboxGroupInput("gw_subset","Subset GW data by:",choices = list("Variance"= "VAR","Median Absoute Deviation" = "MAD", "Inter Quartile Range" = "IQR"), selected = c("VAR", "MAD", "IQR")),
+                 checkboxGroupInput("gw_subset","Subset GW data by:",choices = list("Variance"= "VAR","Median Absoute Deviation" = "MAD", "Inter Quartile Range" = "IQR"), selected = c("IQR")),
                  conditionalPanel(condition = "$.inArray('VAR', input.gw_subset) > -1 & $.inArray('MAD', input.gw_subset) > -1 & $.inArray('IQR', input.gw_subset) > -1",
                                   radioButtons("IMVA_PercenChoice", "Percentile", c("Percentile Slider" = "Percentile Slider", "Manually Enter Percentile" = "Manually Enter Percentile")), ###
                                   conditionalPanel(condition = "input.IMVA_PercenChoice == 'Percentile Slider'",
                                                    sliderInput("IMVA_pslider", "Percentile Value:", 
                                                                min=0, max=100, value=45)),
                                   conditionalPanel(condition = "input.IMVA_PercenChoice == 'Manually Enter Percentile'",
-                                                   numericInput("IMVA_pInput", label = "Percentile value", min = 0, max = 100, value = 45, step = 5))),
+                                                   numericInput("IMVA_pInput", label = "Percentile value", min = 0, max = 100, value = 95, step = 5))),
                  conditionalPanel(condition = "$.inArray('VAR', input.gw_subset) > -1 & $.inArray('MAD', input.gw_subset) > -1 & $.inArray('IQR', input.gw_subset) <= -1",
                                   radioButtons("var_mad_PercenChoice", "Percentile", c("Percentile Slider" = "Percentile Slider", "Manually Enter Percentile" = "Manually Enter Percentile")), ###
                                   conditionalPanel(condition = "input.var_mad_PercenChoice == 'Percentile Slider'",
@@ -112,12 +117,12 @@ fluidPage(
                                   radioButtons("iqr_PercenChoice", "Percentile", c("Percentile Slider" = "Percentile Slider", "Manually Enter Percentile" = "Manually Enter Percentile")),
                                   conditionalPanel(condition = "input.iqr_PercenChoice == 'Percentile Slider'",
                                                    sliderInput("iqr_pslider", "Percentile Value:", 
-                                                               min=0, max=100, value=75)),
+                                                               min=0, max=100, value=99)),
                                   conditionalPanel(condition = "input.iqr_PercenChoice == 'Manually Enter Percentile'",
                                                    numericInput("iqr_pInput", label = "Percentile value", min = 0, max = 100, value = 75, step = 5))
-                   )
+                   ),
                   
-                 
+                 actionButton("button1", "Run Analysis")
                  ),
                 
                wellPanel(h3("Download subset data"),
@@ -130,9 +135,18 @@ fluidPage(
                                                  "Load my own data" = "load_my_own_gw_subset_1")),
                          conditionalPanel("input.gw_file_1 == 'load_my_own_gw_subset_1'",
                                           fileInput('gw_file_2', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
-                         conditionalPanel("input.gw_file_1 == 'GW_Example_1'", downloadButton('download_GW_Ex_1', 'Download subset Pre-existing DS'))
-                         
+                         conditionalPanel("input.gw_file_1 == 'GW_Example_1'", downloadButton('download_GW_Ex_1', 'Download subset Pre-existing DS')),
+                         br(),
+                         br(),
+                         actionButton("button2", "Run Analysis")
                ),
+               
+               conditionalPanel("input.gw_file_1 == 'load_my_own_gw_subset_1'",
+                                wellPanel(h3("Input Settings"),
+                                          h4("Select first row and column where numeric data starts"),
+                                          numericInput("DataR2", label = "Data row", min = 1, max = 10, value = 3),
+                                          numericInput("DataC2", label = "Data column", min = 1, max = 10, value = 3)
+                                )),
                
                 wellPanel(h3("Download subset HeatMap"),
                   textInput("fname_HM", "Save HeatMap as :", value = "GW_subset_HM"),
@@ -148,7 +162,10 @@ fluidPage(
                                         "Load my own data" = "load_my_own_gw_subset")),
                 conditionalPanel("input.gw_file3 == 'load_my_own_gw_subset'",
                                  fileInput('gw_file4', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
-                conditionalPanel("input.gw_file3 == 'GW_Example3'", downloadButton('download_GW_Ex3', 'Download subset Pre-existing DS'))
+                conditionalPanel("input.gw_file3 == 'GW_Example3'", downloadButton('download_GW_Ex3', 'Download subset Pre-existing DS')),
+                br(),
+                br(),
+                actionButton("button3", "Run Analysis")
                ),
               
                 conditionalPanel("input.conditionedPanels == 1", 
@@ -169,7 +186,10 @@ fluidPage(
                                                    "Load my own clusters" = "load_my_own_gw_subset3")),
                            conditionalPanel("input.gw_file7 == 'load_my_own_gw_subset3'",
                                             fileInput('gw_file8', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
-                           conditionalPanel("input.gw_file7 == 'GW_Example7'", downloadButton('download_GW_Ex7', 'Download subset Pre-existing silhouette clusters'))
+                           conditionalPanel("input.gw_file7 == 'GW_Example7'", downloadButton('download_GW_Ex7', 'Download subset Pre-existing silhouette clusters')),
+                           br(),
+                           br(),
+                           actionButton("button4", "Run Analysis")
                             
                 ),
                 wellPanel(h3("Download Silhouette Core Samples"),
@@ -181,7 +201,30 @@ fluidPage(
                 ),
                 
               conditionalPanel("input.gw_conditionedPanels == 5",
+               wellPanel(h3("Input Core Data"),
+                         selectInput("gw_file9",label= "Select an example dataset or upload your own with 'Load my own Core data.'", 
+                                      choices = c("Pre-existing data subset"= "GW_Example9", 
+                                     "Load my own data" = "load_my_own_core")),
+                         conditionalPanel("input.gw_file9 == 'load_my_own_core'",
+                                fileInput('gw_file10', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
+                         br(),
+                        
+                         #conditionalPanel("input.gw_file9 == 'Core_data'", downloadButton('download_cc_Ex1', 'Download DS'))
+                         actionButton("button5", "Run Analysis")
+                               ),
+               conditionalPanel("input.gw_file9 == 'load_my_own_core'",
+               wellPanel(h3("Input Settings"),
+                         h4("Select first row and column where numeric data starts"),
+                         numericInput("DataR1", label = "Data row", min = 1, max = 10, value = 5),
+                         numericInput("DataC1", label = "Data column", min = 1, max = 10, value = 3)
+               )),
+                         
+                         
+              
                 conditionalPanel("input.cc_conditionedPanels == 1 | input.cc_conditionedPanels == 2 | input.cc_conditionedPanels == 3",  
+                #wellPanel(
+                #         actionButton("button5", "Run Analysis")),
+                
                 wellPanel(h3("Core Sample based Downloads"),
                           br(), 
                           textInput("cc_fname_subset", "Type the file name you would like to save subset data as :", value = "Core_Subset_data"),
@@ -196,10 +239,10 @@ fluidPage(
                          
                           
                           ))
-              ) ),               
+              )),               
                 column(8, p(HTML("<p> <h3> A Genome-Wide Heatmap can be very dense. Given the limitation with the computational power required to construct a genome wide heatmap, NOJAH showcases a <font color = '#338AFF'> <i> Genome-Wide Dendrogram. </i> </font> </h3> <br> 
                                  <p> <h3> <strong> <u> Genome-Wide Heatmap Analysis workflow is divided into four main subparts: </strong> </u> </h3> 
-                                 <p> <font color = '#338AFF'> <h3> 1. <i> Identify the Most Variable Features </i> <br>
+                                 <p> <font color = '#338AFF'> <h3> 1. <i> Select the Most Variable Features </i> <br>
                                  <p> 2. <i> Construct a HeatMap for the Most Variable Features </i> <br>
                                  <p> 3. <i> Identify Number of Clusters and Assess Cluster Stability </i> <br>
                                  <p> 4. <i> Identify Core Samples </i> </font> <br>
@@ -228,60 +271,65 @@ fluidPage(
                      plotOutput("gw_dend", height = 500),
                      h3(strong("Measures of Spread")),
                      plotlyOutput("Boxplot"), 
-                     h3(strong("Identify Most Variable Features")),
+                     h3(strong("Select Most Variable Features")),
                      h5(em("To see the position of your 'gene of interest', use the 'Choose Option' drop down to the right")),
                      plotlyOutput("GW_Scatter_LH"),
                      htmlOutput("n_selected"), 
-                     conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1),
+                     conditionalPanel(condition="input.button1 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1),
                 tabPanel("Heatmap",
                      h3(strong("Construct a Heatmap : Visualization of Selected Subset")),
                      tabsetPanel(type = "tabs", 
                        tabPanel("HeatMap", plotOutput("GW_subset_heatmap", height = 1200), 
-                                conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
+                                conditionalPanel(condition="input.button2 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
                        tabPanel("Column Dendrogram",plotOutput("plot1", height = 800), htmlOutput("display"), br(), DT::dataTableOutput("df"), 
-                                conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
+                                conditionalPanel(condition="(input.button2 & input.button2) & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
                        tabPanel("Row Dendrogram",plotOutput("plot2", height = 800), htmlOutput("display2"), br(), DT::dataTableOutput("df2"),  
-                                conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3), 
+                                conditionalPanel(condition="input.button2 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3), 
                        id = "conditionedPanels"), value =2),
                 tabPanel("Cluster Number and Stability",
                      h3(strong("Number of clusters and Assessing cluster stability")),
                      plotOutput("gw_cc", height = 600, width = 2400), 
-                     conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 3),
+                     conditionalPanel(condition="input.button3 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 3),
                 tabPanel("Core Samples",
                      h3(strong("Core samples")),
-                     plotOutput("gw_core_sam", height = 1500), 
-                     conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value= 4),
+                     plotOutput("gw_core_sam", height = 1800), 
+                     conditionalPanel(condition="input.button4 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value= 4),
                 tabPanel("Updated Heatmap",
                      h3(strong("Updated HeatMap based on Consensus Core Samples")),
                      tabsetPanel(type = "tabs", 
                                  tabPanel("HeatMap", plotOutput("cc_GW_subset_heatmap", height = 1200), 
-                                          conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
+                                          conditionalPanel(condition="input.button5 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
                                  tabPanel("Column Dendrogram",plotOutput("cc_plot1", height = 800), htmlOutput("cc_display"), br(), DT::dataTableOutput("cc_df"), 
-                                          conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
+                                          conditionalPanel(condition="input.button5 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
                                  tabPanel("Row Dendrogram",plotOutput("cc_plot2", height = 800), htmlOutput("cc_display2"), br(), DT::dataTableOutput("cc_df2"), 
-                                          conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3), 
+                                          conditionalPanel(condition="input.button5 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3),
                                  id = "cc_conditionedPanels"), value= 5),
+                tabPanel("Workflow",
+                      h3(strong("Workflow for Genome-Wide Analysis")),
+                      DiagrammeROutput("diagram", height = 1000), 
+                      conditionalPanel(condition="input.button3 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 6),
+                
                 id= "gw_conditionedPanels")
       
                      ),
                column(2, 
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                      br(), br(), br(), br(),
+                      br(), br(), br(), br(), br(), br(), br(),
                  conditionalPanel("input.gw_conditionedPanels == 1",
                       ########## GW dendrogram options ##########
                       wellPanel(  
                       h4("Genome-Wide Dendrogram Options"),
                       selectInput("GW_norm", "Normalization Type",
-                                  c("Z-Score", "Modified Z-Score", "none")),
+                                  c("Z-Score", "Modified Z-Score", "none"), selected = "Z-Score"),
                       selectInput("GW_norm2", "Normalize by:",
-                                  c("row", "col", "both")),
+                                  c("row", "col", "both"), selected = "row"),
                       sliderInput("GW_inSlider", "Scale Range",
                                   min = -10, max = 20, value = c(-2, 2)),
                       selectInput("GW_dist", "Distance Method",
-                                  c("pearson correlation", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")),
+                                  c("pearson correlation", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson correlation"),
                       selectInput("GW_hclust", "Agglomerative Linkage Method", 
-                                  c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid")),
+                                  c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "ward.D"),
                       sliderInput("gw_dend_size", "Dendrogram Label size:", min=0, max=1, value=0.4)
                       ),
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
@@ -296,7 +344,7 @@ fluidPage(
                         selectInput("norm", "Normalization Type",
                              c("Z-Score", "Modified Z-Score", "none")),
                         selectInput("norm2", "Normalize by:",
-                             c("row", "col", "both")),
+                             c("row", "col", "both"), selected = "both"),
                         sliderInput("inSlider", "Scale Range",
                              min = -10, max = 20, value = c(-2, 2)),
                         sliderInput("inSlider2", "Plot Margin dimensions",
@@ -304,9 +352,9 @@ fluidPage(
                         wellPanel(  
                           h4("Clustering Measures"),
                           selectInput("dist", "Distance Method",
-                             c("pearson correlation", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")),
+                             c("pearson correlation", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson correlation"),
                           selectInput("hclust", "Agglomerative Linkage Method", 
-                             c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid")),
+                             c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "ward.D"),
                           conditionalPanel("input.conditionedPanels==1 ", 
                                   radioButtons("clust_byrow", "Row dendrogram", inline = TRUE, c("TRUE", "FALSE")) ,
                           #conditionalPanel("input.conditionedPanels==1", 
@@ -350,17 +398,57 @@ fluidPage(
                     wellPanel(h3("Consensus Clustering Options"),
                                                selectInput("con_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson"),
                                                selectInput("con_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                                               radioButtons("con_pItems", "No. of iterations", choices = c(10, 100, 500, 1000), selected = 10)),
+                                               radioButtons("con_pItems", "No. of iterations", choices = c(10, 100, 500, 1000), selected = 100)),
                                      
                     wellPanel(h3("Choose Optimal Number of clusters"),
-                            numericInput("con_opt_k", "Optimal k is ", value = 3))
+                            numericInput("con_opt_k", "Optimal k is ", value = 2))
                         )),
                  conditionalPanel("input.gw_conditionedPanels == 4",
                     wellPanel(h3("Silhouette Options"),
                               conditionalPanel("input.gw_file5 == 'load_my_own_gw_subset2'",
                                    selectInput("sil_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean")
                                ),
-                              sliderInput("upto_slider", "Remove Samples with Silhoutte width less than:", min = 0, max = 1.0, value = 0.07)        
+                              radioButtons("sil_choice", "Remove samples based on:", choices= c("Fixed value" = "Fixed value", "Percentile"= "Percentile", "Change point" = "Change point")),
+                              conditionalPanel("input.sil_choice == 'Fixed value'",
+                                    conditionalPanel("input.con_opt_k >= 1", sliderInput("upto_slider1", "Remove Samples within Cluster1 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.3)),
+                                    conditionalPanel("input.con_opt_k >= 2", sliderInput("upto_slider2", "Remove Samples within Cluster2 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.3)),
+                                    conditionalPanel("input.con_opt_k >= 3", sliderInput("upto_slider3", "Remove Samples within Cluster3 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.0)),
+                                    conditionalPanel("input.con_opt_k >= 4", sliderInput("upto_slider4", "Remove Samples within Cluster4 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.0)),
+                                    conditionalPanel("input.con_opt_k >= 5", sliderInput("upto_slider5", "Remove Samples within Cluster5 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.0)),
+                                    conditionalPanel("input.con_opt_k >= 6", sliderInput("upto_slider6", "Remove Samples within Cluster6 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.0)),
+                                    conditionalPanel("input.con_opt_k >= 7", sliderInput("upto_slider7", "Remove Samples within Cluster7 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.0)),
+                                    conditionalPanel("input.con_opt_k >= 8", sliderInput("upto_slider8", "Remove Samples within Cluster8 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.0)),
+                                    conditionalPanel("input.con_opt_k >= 9", sliderInput("upto_slider9", "Remove Samples within Cluster9 with Silhoutte width less than:", min = 0, max = 1.0, value = 0.0))
+                             ),
+                              conditionalPanel("input.sil_choice == 'Percentile'",
+                                    #numericInput("sil_percen", "Remove Samples with Silhoutte width less than what percentile:", value = 10, min = 0, max = 50, step = 5)
+                                    #conditionalPanel("input.sil_choice == 'Fixed value'",
+                                    conditionalPanel("input.con_opt_k >= 1", sliderInput("sil_percen1", "Remove Samples within Cluster1 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 2", sliderInput("sil_percen2", "Remove Samples within Cluster2 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 3", sliderInput("sil_percen3", "Remove Samples within Cluster3 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 4", sliderInput("sil_percen4", "Remove Samples within Cluster4 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 5", sliderInput("sil_percen5", "Remove Samples within Cluster5 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 6", sliderInput("sil_percen6", "Remove Samples within Cluster6 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 7", sliderInput("sil_percen7", "Remove Samples within Cluster7 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 8", sliderInput("sil_percen8", "Remove Samples within Cluster8 with percentile silhoutte width less than:", min = 0, max = 50, value = 10)),
+                                    conditionalPanel("input.con_opt_k >= 9", sliderInput("sil_percen9", "Remove Samples within Cluster9 with percentile silhoutte width less than:", min = 0, max = 50, value = 10))
+                                    ),
+                              conditionalPanel("input.sil_choice == 'Change point'",
+                                    selectInput("changes","Changes Using:", c('mean','var','meanvar'),selected="meanvar", selectize = FALSE),
+                                    selectInput("method","Method:", c('AMOC','PELT','BinSeg','SeqNeigh'),selected="BinSeg", selectize = FALSE),
+                                    numericInput("max","Max Q Allowed:", min=1, max=60, step=5, value=60),
+                                    conditionalPanel("input.con_opt_k >= 1", numericInput("sil_cp1", "Remove Samples within Cluster1 with silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 2", numericInput("sil_cp2", "Remove Samples within Cluster2 with silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 3", numericInput("sil_cp3", "Remove Samples within Cluster3 with silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 4", numericInput("sil_cp4", "Remove Samples within Cluster4 with Silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 5", numericInput("sil_cp5", "Remove Samples within Cluster5 with Silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 6", numericInput("sil_cp6", "Remove Samples within Cluster6 with Silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 7", numericInput("sil_cp7", "Remove Samples within Cluster7 with Silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 8", numericInput("sil_cp8", "Remove Samples within Cluster8 with Silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1)),
+                                    conditionalPanel("input.con_opt_k >= 9", numericInput("sil_cp9", "Remove Samples within Cluster9 with Silhoutte width greater than change point:", value = 1, min = 0, max = 10, step = 1))
+                                    
+                              )
+                              
                     ) ),
                  conditionalPanel("input.gw_conditionedPanels == 5",
                     conditionalPanel("input.cc_conditionedPanels == 1", 
@@ -370,7 +458,7 @@ fluidPage(
                                        selectInput("cc_norm", "Normalization Type",
                                                    c("Z-Score", "Modified Z-Score", "none")),
                                        selectInput("cc_norm2", "Normalize by:",
-                                                   c("row", "col", "both")),
+                                                   c("row", "col", "both"), selected = "both"),
                                        sliderInput("cc_inSlider", "Scale Range",
                                                    min = -10, max = 20, value = c(-2, 2)),
                                        sliderInput("cc_inSlider2", "Plot Margin dimensions",
@@ -378,16 +466,16 @@ fluidPage(
                                      wellPanel(  
                                        h4("Clustering Measures"),
                                        selectInput("cc_dist", "Distance Method",
-                                                   c("pearson correlation", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")),
+                                                   c("pearson correlation", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean"),
                                        selectInput("cc_hclust", "Agglomerative Linkage Method", 
-                                                   c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid")),
+                                                   c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "complete"),
                                        conditionalPanel("input.conditionedPanels==1 ", 
                                                         radioButtons("cc_clust_byrow", "Row dendrogram", inline = TRUE, c("TRUE", "FALSE")) ,
                                                         radioButtons("cc_clust_bycol", "Col dendrogram", inline = TRUE, c("TRUE", "FALSE")) ,
                                                         radioButtons("cc_dispRow", "Display Row labels?:", inline = TRUE,c("No", "Yes")),
-                                                        conditionalPanel("input.cc_dispRow == 'Yes'", sliderInput("size1", "If yes, Row Label font size", min = 0.01, max = 3, value = 0.5)),
+                                                        conditionalPanel("input.cc_dispRow == 'Yes'", sliderInput("cc_size1", "If yes, Row Label font size", min = 0.01, max = 3, value = 0.5)),
                                                         radioButtons("cc_dispCol", "Display Col labels?:", inline = TRUE, c("No", "Yes")),
-                                                        conditionalPanel("input.cc_dispCol == 'Yes'", sliderInput("size2", "If yes, Col Label font size", min = 0.01, max = 3, value = 0.5) ))
+                                                        conditionalPanel("input.cc_dispCol == 'Yes'", sliderInput("cc_size2", "If yes, Col Label font size", min = 0.01, max = 3, value = 0.5) ))
                                      ), 
                                      wellPanel(
                                        h4("Heat Map colors"),
@@ -426,63 +514,88 @@ fluidPage(
                       wellPanel(
                         h3("Input file"),
                         conditionalPanel("input.cPanels1 == 1",
-                                         selectInput("Exp_file",label= "Select the example CoMMpass Expression ds or upload your own with 'Load my own'", 
-                                                     choices = c("Example ds File"="Exp_example", "Load my own data" = "Exp_load_my_own")),
+                                         selectInput("Exp_file",label= "Select the example Expression ds or upload your own with 'Load my own'", 
+                                                     choices = c("Example TCGA BRCA Exp ds"="Exp_example", "Example CoMMpass Exp ds"="Exp_example1", "Load my own data" = "Exp_load_my_own")),
                                          conditionalPanel("input.Exp_file == 'Exp_load_my_own'",
                                                           fileInput('Exp_file2', 'Choose file to upload (maximum size 500 MB).', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))),
                                          conditionalPanel("input.Exp_file == 'Exp_example'",
-                                                          downloadButton('Exp_download', 'Download Expression data'))),
+                                                          downloadButton('Exp_download', 'Download TCGA BRCA Expression data')),
+                                         conditionalPanel("input.Exp_file == 'Exp_example1'",
+                                                          downloadButton('Exp_download1', 'Download CoMMpass Expression data'))
+                                         ),
                         conditionalPanel("input.cPanels1 == 2",
-                                         selectInput("Variant_file",label= "Select the example CoMMpass Variant ds or upload your own with 'Load my own'", 
-                                                     choices = c("Example ds File"="Variant_example", "Load my own data" = "Variant_load_my_own")),
+                                         selectInput("Variant_file",label= "Select the example Meth/Variant ds or upload your own with 'Load my own'", 
+                                                     choices = c("Example TCGA BRCA Meth ds"="Variant_example", "Example CoMMpass Variant ds"="Variant_example1", "Load my own data" = "Variant_load_my_own")),
                                          conditionalPanel("input.Variant_file == 'Variant_load_my_own'",
                                                           fileInput('Variant_file2', 'Choose file to upload (maximum size 500 MB).', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))),
                                          conditionalPanel("input.Variant_file == 'Variant_example'",
-                                                          downloadButton('Variant_download', 'Download Variant data'))),
+                                                          downloadButton('Variant_download', 'Download TCGA BRCA Meth data')),
+                                         conditionalPanel("input.Variant_file == 'Variant_example1'",
+                                                           downloadButton('Variant_download1', 'Download CoMMpass Variant data'))
+                                         ),
                         conditionalPanel("input.cPanels1 == 3",
-                                         selectInput("CNV_file",label= "Select the example CoMMpass CNV ds or upload your own with 'Load my own'", 
-                                                     choices = c("Example ds File"="CNV_example", "Load my own data" = "CNV_load_my_own")),
+                                         selectInput("CNV_file",label= "Select the example CNV ds or upload your own with 'Load my own'", 
+                                                     choices = c("Example TCGA BRCA CNV ds"= "CNV_example", "Example CoMMpass CNV ds"="CNV_example1", "Load my own data" = "CNV_load_my_own")),
                                          conditionalPanel("input.CNV_file == 'CNV_load_my_own'",
                                                           fileInput('CNV_file2', 'Choose file to upload (maximum size 500 MB).', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))),
                                          conditionalPanel("input.CNV_file == 'CNV_example'",
-                                                          downloadButton('CNV_download', 'Download CNV data'))),
+                                                          downloadButton('CNV_download', 'Download TCGA BRCA CNV data')),
+                                         conditionalPanel("input.CNV_file == 'CNV_example1'",
+                                                          downloadButton('CNV_download1', 'Download coMMpass CNV data'))
+                                         ),
                         conditionalPanel("input.cPanels1 == 4",
-                                         selectInput("coca_file",label= "Select the example CoC analysis ds or upload your own with 'Load my own'", 
+                                         selectInput("coca_file",label= "Select the example CrC analysis ds or upload your own with 'Load my own'", 
                                                      choices = c("Example ds File"="coca_example", "Load my own data" = "coca_load_my_own")),
                                          conditionalPanel("input.coca_file == 'coca_load_my_own'",
                                                           fileInput('coca_file2', 'Choose file to upload (maximum size 500 MB).', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))),
                                          conditionalPanel("input.coca_file == 'coca_example'",
-                                                          downloadButton('coca_download', 'Download CoC analysis data')))
+                                                          downloadButton('coca_download', 'Download CrC analysis data')))
                         ),
+                      conditionalPanel("input.cPanels1 == 2",
+                       wellPanel(h3("Data type"),
+                                 radioButtons("dt_choice", "Choose data used", choices = c("Methylation" = "M", "Variant" = "V"), selected = "M")
+                     )),
                        wellPanel(h3("Clustering Options"),
                           conditionalPanel("input.cPanels1 == 1",      
                             selectInput("Exp_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson"),
                             selectInput("Exp_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("Exp_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 50)),
+                            radioButtons("Exp_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 100),
+                            br(),
+                            actionButton("button6", "Run Analysis")),
                           conditionalPanel("input.cPanels1 == 2",      
-                            selectInput("Variant_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "maximum"),
-                            selectInput("Variant_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("Variant_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 50)),
+                            selectInput("Variant_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson"), #"manhattan"
+                            selectInput("Variant_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"), #"average"
+                            radioButtons("Variant_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 100),
+                            br(),
+                            actionButton("button7", "Run Analysis")),
                           conditionalPanel("input.cPanels1 == 3",      
-                            selectInput("CNV_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "manhattan"),
-                            selectInput("CNV_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("CNV_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 50)),
+                            selectInput("CNV_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "canberra"),
+                            selectInput("CNV_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "mcquitty"),
+                            radioButtons("CNV_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 100),
+                            br(),
+                            actionButton("button8", "Run Analysis")),
                           conditionalPanel("input.cPanels1 == 4",
-                            checkboxGroupInput("coca_platform","Perform CoC analysis using", choices = list("Expression"= "EXP","Variant" = "PROP", "Copy Number" = "CNV"), selected = c("EXP", "PROP", "CNV")),
-                            h6("Select atleast two platforms to run CoC analysis"),
+                            checkboxGroupInput("coca_platform","Perform CrC analysis using", choices = list("Expression"= "EXP","Methylation/Variant" = "PROP", "Copy Number" = "CNV"), selected = c("EXP", "PROP", "CNV")),
+                            h6("Select atleast two platforms to run CrC analysis"),
                             selectInput("coca_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean"),
-                            selectInput("coca_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
-                            radioButtons("coca_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 50))
+                            selectInput("coca_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "ward.D"),
+                            radioButtons("coca_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 100),
+                            br(),
+                            actionButton("button9", "Run Analysis"))
                           
                       ),
                       conditionalPanel("input.cPanels1 == 4",
                             wellPanel(h4("Clinical markers"),
                                selectInput("clinical",label= "Select a clinical feature from below or add your own using 'Load your own'.", 
-                                 choices = c("Features available"="available", "Load my own clinical data" = "load_my_own_c")),
+                                 choices = c("Features available from TCGA BRCA"="available", "Features available from coMMpass ds"="available1", "Load my own clinical data" = "load_my_own_c")),
                                conditionalPanel("input.clinical == 'available'",
-                                 downloadButton('download_clinical', 'Download clinical ds Example'),
-                                     br(), br(),
-                               checkboxGroupInput("cli_feature","Choose Clinical feature to be added:",choices = list("High vs Not High Risk"= "HR"), selected = "HR")),
+                                 downloadButton('download_clinical', 'Download TCGA BRCA clinical ds Example')),
+                               conditionalPanel("input.clinical == 'available1'",
+                                                  downloadButton('download_clinical1', 'Download coMMpass clinical ds Example')),
+                               br(), br(),
+                               checkboxInput("cli_feature","Add clinical features (Yes/No)", value = FALSE),
+                              # conditionalPanel("input.cli_feature == 'TRUE'",
+                               numericInput("cli_feature_no", "Number of features", min = 1, max = 5, step =1, value = 1), #), 
                                conditionalPanel("input.clinical == 'load_my_own_c'",
                                     fileInput('clinical_file', 'Choose file to upload (maximum size 500 MB).', accept=c('text/csv', 'text/comma-separated-values,text/plain', '.csv')))
                       )),
@@ -492,19 +605,19 @@ fluidPage(
                                   downloadButton("Exp_cc_dl", label = "Download Expression clusters"),
                                   h6("Download may take a while. Once complete, the result pdf file will automatically open.")),
                           conditionalPanel("input.cPanels1 == 2", 
-                                  downloadButton("Variant_cc_dl", label = "Download Variant clusters"), 
+                                  downloadButton("Variant_cc_dl", label = "Download Meth/Variant clusters"), 
                                   h6("Download may take a while. Once complete, the result pdf file will automatically open.")),
                           conditionalPanel("input.cPanels1 == 3", 
                                   downloadButton("CNV_cc_dl", label = "Download CNV clusters"),
                                   h6("Download may take a while. Once complete, the result pdf file will automatically open.")),
                           conditionalPanel("input.cPanels1 == 4", 
-                                 downloadButton("coca_cc_dl", label = "Download CoC analysis"),
+                                 downloadButton("coca_cc_dl", label = "Download CrC analysis"),
                                  h6("Download may take a while. Once complete, the result pdf file will automatically open."),
                                  h4("Sample Clusters"),
-                                 downloadButton("coca_sil", label = "Download CoC Sample clusters"),
+                                 downloadButton("coca_sil", label = "Download CrC Sample clusters"),
                                  br(),br(),
                                  h4("CoC HeatMap"),
-                                 downloadButton('download_coca_HM', 'Download CoC Analysis HM'),
+                                 downloadButton('download_coca_HM', 'Download CrC Analysis HM'),
                                  br(),br(),
                                  h4("Cluster Interpretation"),
                                  downloadButton('dl_coca_inter', 'Download Cluster Interpretation')
@@ -534,19 +647,23 @@ fluidPage(
                     
                       tabsetPanel(type = "tabs", 
                                   tabPanel("Expresssion", htmlOutput("com_text1"), plotOutput("Exp_cc", height = 500), br(), htmlOutput("com_text2"), plotOutput("Exp_sil", height = 800), 
-                                      conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
-                                  tabPanel("Variant", htmlOutput("com_text12"), plotOutput("Variant_cc", height = 500), br(), htmlOutput("com_text22"), plotOutput("Variant_sil", height = 800), 
-                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
-                                  tabPanel("Copy Number", htmlOutput("com_text13"),plotOutput("CNV_cc", height = 500), br(), htmlOutput("com_text23"), plotOutput("CNV_sil", height = 800),  
-                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3),
-                                  tabPanel("Cluster of Clusters (CoC) Analysis", htmlOutput("com_text14"), plotOutput("coca_cc", height = 500), br(),htmlOutput("com_text3"), plotOutput("coca_heatmap", height = 1200), htmlOutput("com_text31"), plotOutput("varmean_bxplot"),
-                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 4),
+                                      conditionalPanel(condition="input.button6 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
+                                  tabPanel("Methylation/Variant", htmlOutput("com_text12"), plotOutput("Variant_cc", height = 500), br(), htmlOutput("com_text22"), plotOutput("Variant_sil", height = 800), 
+                                           conditionalPanel(condition="input.button7 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
+                                  tabPanel("Copy Number", htmlOutput("com_text13"), plotOutput("CNV_cc", height = 500), br(), htmlOutput("com_text23"), plotOutput("CNV_sil", height = 800),  
+                                           conditionalPanel(condition="input.button8 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3),
+                                  tabPanel("Cluster of Clusters (CoC) Analysis", htmlOutput("com_text14"), plotOutput("coca_cc", height = 500), br(),htmlOutput("com_text3"), plotOutput("coca_heatmap", height = 1200), htmlOutput("com_text31"), plotOutput("varmean_bxplot"), htmlOutput("com_text32"),  
+                                          # fluidRow(
+                                    #column(width = 4, 
+                                    htmlOutput("com_text33"), rHandsontableOutput("foo"), #),
+                                    #column(width = 8, br(), br(), br(), rHandsontableOutput("foo1"))),
+                                           conditionalPanel(condition="input.button9 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 4),
                                   id = "cPanels1")
                       
                 ),
                column(2,
                       wellPanel(h3("Choose Optimal Number of clusters"),
-                                conditionalPanel("input.cPanels1 == 1", numericInput("Exp_opt_k", "Optimal k is ",value = 5)),
+                                conditionalPanel("input.cPanels1 == 1", numericInput("Exp_opt_k", "Optimal k is ",value = 2)),
                                 conditionalPanel("input.cPanels1 == 2", numericInput("Variant_opt_k", "Optimal k is ",value = 2)),
                                 conditionalPanel("input.cPanels1 == 3", numericInput("CNV_opt_k", "Optimal k is ",value = 2)),
                                 conditionalPanel("input.cPanels1 == 4", numericInput("coca_opt_k", "Optimal k is ",value = 2))
@@ -565,7 +682,7 @@ fluidPage(
                                          selectInput("dist_4", "Distance Method",
                                                      c("pearson correlation", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean"),
                                          selectInput("hclust_4", "Agglomerative Linkage Method", 
-                                                     c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
+                                                     c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "ward.D"),
                                          radioButtons("clust_byrow_4", "Row dendrogram", inline = TRUE, c("TRUE", "FALSE")) ,
                                          radioButtons("clust_bycol_4", "Col dendrogram", inline = TRUE, c("TRUE", "FALSE")) ,
                                          radioButtons("dispRow_4", "Display Row labels?:", inline = TRUE,c("No", "Yes"), selected = "Yes"),
@@ -599,16 +716,19 @@ fluidPage(
                column(2,
                       wellPanel(h3("Input Data to test significance of clusters "),
                                 selectInput("Sig_file1",label= "Select an example dataset or upload your own with 'Load my own GW data.'", 
-                                            choices = c("Example Exp Data"="Sig_Example1", "Load my own data" = "load_my_own_Sig")),
+                                            choices = c("Example TCGA BRCA Expression Data"="Sig_Example1", "Example CoMMpass  RNASeq gene Expression Data"="Sig_Example2", "Load my own data" = "load_my_own_Sig")),
                                 conditionalPanel("input.Sig_file1 == 'load_my_own_Sig'",
                                                  fileInput('Sig_file2', 'Choose file to upload (maximum size 50 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))), 
-                                conditionalPanel("input.Sig_file1 == 'Sig_Example1'", downloadButton('download_Sig_Ex1', 'Download Example DataSet'))
-				 #conditionalPanel("input.Sig_file1 == 'Sig_Example2'", downloadButton('download_Sig_Ex2', 'Download Example DataSet'))
+                                conditionalPanel("input.Sig_file1 == 'Sig_Example1'", downloadButton('download_Sig_Ex1', 'Download Example DataSet')),
+				                        conditionalPanel("input.Sig_file1 == 'Sig_Example2'", downloadButton('download_Sig_Ex2', 'Download Example DataSet'))
 
                       ),
-                      wellPanel(h4("Select Data Rows and column start"),
-                                numericInput("DataR", label = "Data row", min = 1, max = 10, value = 4),
-                                numericInput("DataC", label = "Data column", min = 1, max = 10, value = 3)
+                      wellPanel(h3("Input Settings"),
+                                h4("Select first row and column where numeric data starts"),
+                                numericInput("DataR", label = "Data row", min = 1, max = 10, value = 5),
+                                numericInput("DataC", label = "Data column", min = 1, max = 10, value = 3),
+                                #br(),
+                                actionButton("button10", "Run Analysis")
                                 ),
                       conditionalPanel("input.cPanels2 == 2 | input.cPanels2 == 3 |input.cPanels2 == 4", 
                                        wellPanel(
@@ -625,11 +745,11 @@ fluidPage(
                       tabsetPanel(type = "tabs", 
                                   #tabPanel("ReadMe", htmlOutput("ReadMe"), tableOutput("Eg"), htmlOutput("Caption1"), tableOutput("Eg2"), htmlOutput("Caption2"), htmlOutput("blurp"), value = 1),
                                   tabPanel("HeatMap", plotOutput("Sig_plot", width = 1300, height = 1300 ), 
-                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
+                                           conditionalPanel(condition="input.button10 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
                                   tabPanel("Column Dendrogram", plotOutput("Sig_plot1", height= 600, width = 1500), htmlOutput("Sig_display"), br(), DT::dataTableOutput("Sig_df"), htmlOutput("Sig_pv"), htmlOutput("Sig_pvalue"),  
-                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=3), 
+                                           conditionalPanel(condition="input.button10 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=3), 
                                   tabPanel("Row Dendrogram", plotOutput("Sig_plot2", height = 800, width = 1500), htmlOutput("Sig_display2"), br(), DT::dataTableOutput("Sig_df2"), htmlOutput("Sig_pv2"), htmlOutput("Sig_pvalue2"),  
-                                           conditionalPanel(condition="$('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =4),
+                                           conditionalPanel(condition="input.button10 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =4),
                                   id = "cPanels2")
                       ),
                column(2,
@@ -686,7 +806,7 @@ fluidPage(
                                          conditionalPanel("input.cPanels2==3 & input.Sig_cutcolden == 'TRUE'",
                                                           radioButtons("Sig_pvalue_cal", "Assess Gene set significance in separation of specimens into 2 clusters?:", c("No" = FALSE, "Yes" = TRUE), inline = TRUE)),
                                          conditionalPanel("input.cPanels2==3 & input.Sig_cutcolden == 'TRUE' & input.Sig_pvalue_cal == 'TRUE'" , 
-                                                          selectInput("Sig_file3", label= "Select a dataset or upload your own with 'Load my own data.'", choices = c("Exp Sampling Data" ="Sig_Exp.Example", "Load my own sampling data" = "Sig_load_my_own_s_data"))),
+                                                          selectInput("Sig_file3", label= "Select a dataset or upload your own with 'Load my own data.'", choices = c("Example TCGA BRCA Exp Sampling Data" ="Sig_Exp.Example", "Example CoMMPass Exp Sampling Data" ="Sig_Exp.Example1",  "Load my own sampling data" = "Sig_load_my_own_s_data"))),
                                          conditionalPanel("input.cPanels2==3 & input.Sig_file3 == 'Sig_load_my_own_s_data'",
                                                           fileInput('Sig_file4', 'Choose file to upload to sample from to estimate significance of separation (Maximum size 100 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))) ,
                                          conditionalPanel("input.cPanels2==3 & input.Sig_cutcolden == 'TRUE' & input.Sig_pvalue_cal == 'TRUE'", 
@@ -711,7 +831,7 @@ fluidPage(
                                          conditionalPanel("input.cPanels2==4 & input.Sig_cutrowden == 'TRUE'",
                                                           radioButtons("Sig_pvalue_cal2", "Assess significance of samples in separation of gene set into 2 clusters (only for more than 2 cluster groups)?:", inline = TRUE, c("No" = FALSE, "Yes" = TRUE))),
                                          conditionalPanel("input.cPanels2==4 & input.Sig_cutrowden == 'TRUE' & input.Sig_pvalue_cal2 == 'TRUE' " , 
-                                                          selectInput("Sig_file5", label= "Select a dataset or upload your own with 'Load my own data.'", choices = c("Example Exp Sampling Data" ="Sig_Exp.Example2", "Example Meth Sampling Data" ="Sig_Meth.Example2", "Load my own sampling data" = "load_my_own_s_data2"))),
+                                                          selectInput("Sig_file5", label= "Select a dataset or upload your own with 'Load my own data.'", choices = c("Example TCGA BRCA Exp Sampling Data" ="Sig_Exp.Example2", "Example CoMMpass Exp Sampling Data" ="Sig_Exp.Example21", "Load my own sampling data" = "load_my_own_s_data2"))),
                                          conditionalPanel("input.cPanels2==4 & input.Sig_file5 == 'load_my_own_s_data2'",
                                                           fileInput('Sig_file6', 'Choose file to upload to sample from to estimate significance of separation (Maximum size 75 MB)', accept=c('.xlsx','text/csv', 'text/comma-separated-values,text/plain', '.csv'))) ,
                                          conditionalPanel("input.cPanels2==4 & input.Sig_cutrowden == 'TRUE' & input.Sig_pvalue_cal2 == 'TRUE'", 
