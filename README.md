@@ -5,7 +5,7 @@ This interactive web application: NOt Just Another Heatmap (NOJAH) is developed 
 
 
 1) Perform Genome-Wide Heatmap (GWH) analysis of cancer genomic data sets 
-2) Perform Cluster results Cluster (Crc) analysis for upto three genomic platforms  
+2) Perform Cluster results Cluster (CrC) analysis for upto three genomic platforms  
 3) Perform Significance of Cluster (SoC) analysis using a robust bootstrap approach
 
 The goal of this tool is to provide a one stop shop to perform genomic analyses. It helps users extract the top most variable gene sets from Genome-Wide data, estimated the optimal number of clusters, identify a core subset of samples on their own data. This tool is not restricted to expression data but can use genomic data of any type: e.g. Variant proportions, methylation, copy number segmentation mean values, etc. 
