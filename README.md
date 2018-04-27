@@ -73,7 +73,7 @@ c) Remaining Columns. These should contain the expression measurements as number
 | gene_id           | Groups | GSM9981   | GSM1870  | GSM4618 | GSM7689  | GSM8772 | GSM1121  | GSM1250 | GSM3112  | GSM4987 | GSM1277 |
 | -------------     |-------:| ---------:| --------:|--------:|---------:|--------:|---------:|--------:|---------:|--------:|--------:|
 |                   |        | MM        | MM       | MM      | MM       | MM      | MUGS     | MUGS    | NPC      | SM      | SM      |
-| Subtype           |-------:| Classical | Classical| Neural  | Pro-neural | Classical | Mesenchymal | Classical | Neural | Neural | Neural|
+| Subtype           |        | Classical | Classical| Neural  | Pro-neural | Classical | Mesenchymal | Classical | Neural | Neural | Neural|
 | YWHAE>210996_s_at | A      | 1.47      |  2.18    | 5.87    |	9.12     |	7.34   | 1.56     |	3       |	7.77     |	3.4    |	1.56   |
 | YWHAE>201020_at   | A      | 1.98      |  7.93    | 2.76	  | 9.11     |	8.46   | 0.98     |	5.98    |	8.19     |	8.91   |	5.98   |
 | YWHAH>33323_r_at  | A      | 8.02      |  8       | 3.19	  | 11.86    |	6.54   | 8.17     |	2       |	0.99     |	2      |	1.17   |
