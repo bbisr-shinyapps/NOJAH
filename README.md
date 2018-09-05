@@ -8,16 +8,16 @@ This interactive web application: NOt Just Another Heatmap (NOJAH) is developed 
 2) Perform Cluster results Cluster (CrC) analysis for upto three genomic platforms  
 3) Perform Significance of Cluster (SoC) analysis using a robust bootstrap approach
 
-The goal of this tool is to provide a one stop shop to perform genomic analyses. It helps users extract the top most variable gene sets from Genome-Wide data, estimated the optimal number of clusters, identify a core subset of samples on their own data. This tool is not restricted to expression data but can use genomic data of any type: e.g. Variant proportions, methylation, copy number segmentation mean values, etc. 
+The goal of this tool is to provide a one stop shop to perform genomic analyses. It helps users extract the top most variable gene sets from Genome-Wide data, estimated the optimal number of clusters, identify a core subset of samples on their own data. This tool is not restricted to expression data but can use genomic data of any type: e.g. Variant Allelic frequencies, methylation, copy number segmentation mean values, etc. 
 
 Individual platform data from expression, methylation, copy number for the same samples (in the same order) in each platform can be integrated in the combined results clustering workflow. Typically, the most variable gene/variant/cpg sites subset from each platfrom is used as input. The clustering results from each platform are combined for a second level clustering analysis using the ConsensusClusterPlus bioconductor package. 
 
-For those interested in heatmap analysis, using the Significane of cluster analysis tab, NOJAH lets you generate a HeatMap with only the minimum knowledge of heatmaps and minimal coding experience. The user may upload their own data or use the example TCGA Breast Camcer RNASeq Expression or coMMPass expression data to generate the HeatMap using any distance or clustering method of their choice. Along with the HeatMap, the column and row dendrograms are displayed individually in separate tabs. If you wish to know the samples within each cluster, this information can be downloaded using the cutree download button inside the row/column dendrogram tab. The novelty about this app is that it is highly reproducible and provides minimum information required to reproduce the heatmaps.
+For those interested in heatmap cluster analysis, using the Significane of cluster analysis tab, NOJAH lets you generate a HeatMap with only the minimum knowledge of heatmaps and minimal coding experience. The user may upload their own data or use the example TCGA Breast Cancer RNASeq Expression to generate the HeatMap using any distance or clustering method of their choice. Along with the HeatMap, the column and row dendrograms are displayed individually in separate tabs. If you wish to know the samples within each cluster, this information can be downloaded using the cutree download button inside the row/column dendrogram tab. The novelty about this app is that it is highly reproducible and provides minimum information required to reproduce the heatmaps.
 
 This tool can be accessed using http://bbisr.shinyapps.winship.emory.edu/NOJAH/.
 
 
-For large datasets, we advise using the command line version of NOJAH. For running NOJAH using Rstudio,
+For large datasets, we advise using the command line version of NOJAH. For running NOJAH using RStudio,
 
 #### INSTALLATION
 Firstly, you should have the most recent version of R or RStudio.
@@ -64,7 +64,7 @@ Data should be input as a TXT or a CSV file. The first two rows of the data file
 ##### DATA FORMAT
 
 1.	The first line of the file contains the gene identifier 'gene_id' (column 1), gene group classification 'Groups' (column 2) followed by the patient IDs e.g. TCGA.01.1A2B, one per column, starting at column 3. Column 1 gene identifier has to be labelled 'gene_id' and column 2 header should be labelled 'Groups' for using this tool. Other titles may cause the program to display errors. 
-2.	The second line of the file contains the patient response classification e.g. Fav/Unf for favorable outcome group vs the unfavorable outcome group or Normal/Tumor, etc., in alphabetical order, starting at column 3. The first two columns for this row should be blank.
+2.	The second line of the file contains the patient response classification e.g. Fav/Unf for favorable outcome group vs the unfavorable outcome group or Normal/Tumor, etc., in alphabetical order, starting at column 3. The first two columns for this row should be blank. Additional sample information such as subtype should be included under each sample. Whereever data is missing, it should be coded to none. Leaving field blank may cause the program to cause errors. The first column for the additional clinical field includes the label (for example 'Subtype'), but the second column should be blank.
 3.	The remaining lines contain gene expression measurements one line per gene, described in the format below.
 a) Column_1. This should contain the gene name, for the user's reference. Each gene  name should be unique. When using microarray data, the gene and the probe id can be merged using a delimitor (except '|') to make a unique name.  Delimitors such as >,;:#%&(!)_+ are acceptable.
 b) Column_ 2. This should contain the gene group classification e.g. O/U for Over-expressed/Under-expressed or Hyper/Hypo for hypermethylated/hypomethylated in alphabetical order. If only one gene group, use any alphabet e.g. A or na for each row instead. 
