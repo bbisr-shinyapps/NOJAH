@@ -45,7 +45,7 @@ colbars_gw <- function(df2, colscheme = 2){
     level.names2 <- list()
     colours[[1]] <- c("darkblue", "grey", "orange", "yellow", "purple" , "darkgreen",  "hotpink", "brown", "darkorchid2", "maroon")
     colours[[2]] <- c("red", "green", "dodgerblue2", "violetred4", "yellow2", "plum4", "palevioletred4")
-    colours[[3]] <- topo.colors(10)
+    colours[[3]] <- c("hotpink", "orange", "deepskyblue", "firebrickred", "brown4", "orchid4", "pink2") #topo.colors(10)
     colours[[4]] <- rainbow(10)
     colours[[5]] <- cm.colors(10)
     

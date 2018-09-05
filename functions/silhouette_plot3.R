@@ -2,7 +2,7 @@ silhouette_plot3 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
   rownames(data_use) <- NULL
   
   res = res[order(res$Cluster),]
-  names(res)[1] <- "Sample"
+  names(res)[2] <- "Sample"
   
   data_use <- data_use[,match(res$Sample, colnames(data_use))]
   if(dist == "pearson" | dist == "spearman")
@@ -21,8 +21,8 @@ silhouette_plot3 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
   #m0 <- merge(res2, cols, by = "Sample", sort = F)
   res1 <- as.integer(res2$Cluster)
   
-  sk2 <- silhouette(res1, dt ) # res - has the order of samples is same as in this object
-  rownames(sk2) = colnames(dt)
+  sk2 <- silhouette(res1, dt) # res - has the order of samples is same as in this object
+  #rownames(sk2) = names(dt) #dt
   
   sil.order <- as.numeric(rownames(sortSilhouette(sk2)))
   
@@ -51,7 +51,7 @@ silhouette_plot3 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
   
   
   res3 = m0.1[!(m0.1$order2 %in% neg_sil_index), ]
-  res4 <- res3[,2]
+  res4 <- res3[,"Cluster"]
   
   
   #res3 = res2[!(res2$order %in% neg_sil_index), ]

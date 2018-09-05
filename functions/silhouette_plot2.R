@@ -16,7 +16,7 @@ silhouette_plot2 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
   res1 <- m0[,2]
   
   sk2   <- silhouette(res1, dt ) # res - has the order of samples is same as in this object
-  rownames(sk2) = colnames(dt) # m0$order
+  rownames(sk2) = names(dt) # m0$order
   
   sil.order <- as.numeric(rownames(sortSilhouette(sk2)))
   m0.1 <- m0[match(sil.order, m0$order),]

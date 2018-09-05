@@ -1,7 +1,7 @@
 colbars <- function(df2, colscheme = 2){
   names.of.cols = colnames(df2)
   names.of.cols = names.of.cols[-1]
-  n= nrow(df2)
+  n = nrow(df2)
   df3 <- NULL
   
   for(i in 2:ncol(df2))
@@ -13,7 +13,7 @@ colbars <- function(df2, colscheme = 2){
   if(colscheme != 2)
    { colors <- topo.colors(no.of.levels)
   } else {
-    colors <- c("bisque", "lightpink", "lightgreen", "coral", "darkslategray4")[1:no.of.levels]
+    colors <- c("bisque", "lightpink", "lightgreen", "coral", "darkslategray4", "magenta", "navy", "gray47")[1:no.of.levels]
   }
   
   

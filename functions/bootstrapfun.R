@@ -56,6 +56,10 @@ bootstrapfun <- function(obsdata, samplingdata, distmethod, clustmethod, norm, s
           bootdata2 <- bootdata[complete.cases(bootdata),]
           bootdata3 <- data.matrix(bootdata2)
           
+          if(distmethod == "pearson correlation") {
+          bootdata3 <- bootdata3[apply(bootdata3, 1, var) != 0, ]
+          }
+          
           # Call HEATPLOT2 EQUIVALENT HEATMAP2 CLUSTERING function
           if(norm == "Z-Score") {
             mat <- zClust(bootdata3, scale, zlim)
@@ -70,7 +74,7 @@ bootstrapfun <- function(obsdata, samplingdata, distmethod, clustmethod, norm, s
           if(distmethod == "pearson correlation") {
             # hm <- heatmap.2(as.matrix(mat[[1]]), Rowv=T, Colv=T, scale="none", hclust=function(x) hclust(x,method=clustmethod), distfun=function(x) as.dist((1-cor(t(x)))), margin = c(7,9), density.info=c("none"),trace=c("none"))
             # hc <- as.dendrogram(hm$colDendrogram)
-            hc <- hclust(as.dist((1-cor(mat[[1]]))), method=clustmethod)
+            hc <- hclust(as.dist(1-cor(mat[[1]])))
             
           } else {
             # hm <- heatmap.2(as.matrix(mat[[1]]), scale="none", Rowv=T, Colv=T, hclust=function(c) {hclust(c,method=clustmethod)}, distfun=function(c) {dist(c,method=distmethod)}, margin = c(7,9), density.info=c("none"),trace=c("none"))
