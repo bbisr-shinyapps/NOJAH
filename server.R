@@ -59,20 +59,21 @@ function(input, output) {
   
   output$Caption1 <- renderUI({
     str.0 <- paste("&emsp;")
-    str.1 <- paste("Table 1 : Example dataset for two gene groups (over and under-expressed) and two patient groups (Normal, Tumor).")
+    str.1 <- paste("Table 1 : Example dataset for two gene groups (over and under-expressed) and two patient groups (Normal, Tumor). Numeric data starts at row three and column three.")
     HTML(paste(strong(str.1),str.0, str.0, str.0, sep = '<br/>'))
   })
   
   output$Eg2 <- renderTable({
     coln1 <- c("gene_id", "Groups","GSM9981", "GSM1870", "GSM4618", "GSM7689", "GSM8772", "GSM1121","GSM1250", "GSM3112", "GSM4987", "GSM1277")
     coln2 <- c(" ", " ", rep("MM", 5), rep("MUGS", 2), "NPC", rep("SM", 2))
+    coln3 <- c("Subtype", "", rep("Classical", 2), rep("Neural", 1), rep("Pro-neural", 2), "Classical", rep("Mesenchymal", 1), "Classical", "Neural", "Neural")
     s.1 <- c("YWHAE>210996_s_at", "na", 1.47, 2.18, 5.87, 9.12, 7.34, 1.56, 3.0, 7.77, 3.40, 1.56 )
     s.2 <- c("YWHAE>201020_at", "na", 1.98, 7.93, 2.76, 9.11, 8.46, 0.98, 5.98, 8.19, 8.91, 5.98)
     s.3 <- c("YWHAH>33323_r_at", "na", 8.02, 8.00, 2.17, 10.12, 8.76, 9.76, 3.76, 0.02, 3.67, 7.94)
     s.4 <- c("YWHAB>208743_s_at", "na", 2.75, 5.99, 3.19, 11.86, 6.54, 8.17, 2.00, 0.99, 2.00, 1.17)
     s.5 <- c("YWHAQ>213699_s_at", "na", 9.35, 8.96, 6.67, 8.33, 3.98, 7.11, 1.67, 1.01, 5.18, 8.17)
     
-    d.f <- rbind.data.frame(coln2, s.1, s.2, s.3, s.4, s.5)
+    d.f <- rbind.data.frame(coln2, coln3, s.1, s.2, s.3, s.4, s.5)
     colnames(d.f) <- coln1
     head(d.f)
   })
@@ -80,15 +81,15 @@ function(input, output) {
   
   output$Caption2 <- renderUI({
     strg.0 <- paste("&emsp;")
-    strg.1 <- paste("Table 2: Example dataset for one gene group (marked A) and four patient groups (MM, MUGS, NPC and, SM).")
+    strg.1 <- paste("Table 2: Example dataset for one gene group (marked na) and four patient groups (MM, MUGS, NPC and, SM). Additonal subtype information is appended above the numeric data. Numeric data starts at row four and column three. Any missing entries in subtype should be coded as none. NA or blank may display errors.")
     strg.2 <- paste(" Where applicable, both row and column dendrograms can be extracted in their specific tabs. Using the options on the right panel, dendrograms can be cut into desired no. of clusters (default at 2) and a pvalue of significance between the clusters can be determined using bootstrap method. ")
     HTML(paste(strong(strg.1),strg.0, strg.0,strg.2, strg.0, strg.0, sep = '<br/>'))
   })
   
   output$download_GW_Ex2 <- downloadHandler(
-    filename= function() {paste('CoMMpassIA9.GW.Expression.data_truncated.csv')}, 
+    filename= function() {paste('CoMMpassIA9_GW_Expression_data_GWHA.csv')}, 
     content = function(file) {
-      d <- readRDS("data/CoMMpassIA9.GW.Expression.data_truncated.rds")
+      d <- readRDS("data/CoMMpassIA9_GW_Expression_data_GWHA.rds")
       write.csv(d, file, row.names = FALSE) }
   )
   
@@ -103,7 +104,7 @@ function(input, output) {
   
   input_gw_data <- reactive({
     if(input$gw_file1 == 'GW_Example2'){
-      d <- readRDS("data/CoMMpassIA9.GW.Expression.data_truncated.rds")
+      d <- readRDS("data/CoMMpassIA9_GW_Expression_data_GWHA.rds")
     } else if(input$gw_file1 == 'GW_Example1'){
       #d <- read.csv("data/BRCA_Expression_gene.normalized_log2T_RNAseq_Tumor_Normal_150samples.csv", header = TRUE, sep = ",", stringsAsFactors = F)
       d <- read.csv("data/TCGA_BRCA_Early_Late_OS_6.9years.csv", header = TRUE, sep = ",", stringsAsFactors = F)
@@ -281,6 +282,7 @@ function(input, output) {
           
         }
       
+      check_d2 <<- data2
       return(data.frame(data2))
     } else
       return(NULL)
@@ -363,10 +365,18 @@ function(input, output) {
     bdata <<- gw_data()
     y <- list(
       title = " ")
+    #if(input$GW_outliers == "Include") {
     plot_ly(data, y = data$var, type = 'box', name = 'Var') %>%
       add_trace(y = data$mad, name = 'MAD')  %>%
       add_trace(y = data$IQR, name = 'IQR') %>%
       layout(yaxis = y)
+    #}
+    #else if(input$GW_outliers == "Exclude") {
+     # plot_ly(data, y = data$var, type = 'box', name = 'Var', boxpoints = 'all') %>%
+      #  add_trace(y = data$mad, name = 'MAD', boxpoints = 'all')  %>%
+      #  add_trace(y = data$IQR, name = 'IQR', boxpoints = 'all') %>%
+      #  layout(yaxis = y)
+    #}
     #pp
   })
   
@@ -382,11 +392,11 @@ function(input, output) {
     if(is.null(input$gw_subset)) {
       return()
     }
-    
+    da <<- data
     if(length(input$gw_subset) == 1) {
       if(input$gw_subset == 'VAR') {   
-        p <- plot_ly(data, y=~var, type = "scatter", mode = "markers", name = "Ordered variances") %>%
-          add_trace(p, y = ~var_percen, line=list(dash=3, width= 1, color = "green"), mode = "lines", name = 'Percentile cut-off'  )
+        p <- plot_ly(data, y=~var, type = "scatter", mode = "markers", name = "Ordered variances", color = I('cornflowerblue')) %>%
+          add_trace(p, y = ~var_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off'  )
         if (!is.na(goi[1])) {
           p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$var, text = input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
         }
@@ -394,16 +404,16 @@ function(input, output) {
         p
       }
       else if(input$gw_subset == 'MAD') {
-        p<- plot_ly(data, y=~mad, type = "scatter", mode = "markers", name = "Ordered MAD") %>%
-          add_trace(p, y = data$mad_percen, line=list(dash=3, width= 1, color = "green"), mode = "lines", name = 'Percentile cut-off' )
+        p<- plot_ly(data, y=~mad, type = "scatter", mode = "markers", name = "Ordered MAD", color = I('darkgoldenrod1')) %>%
+          add_trace(p, y = data$mad_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off' )
         if (!is.na(goi[1])) {
           p<- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$mad, text = input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
         }
         p %>% layout(showlegend = TRUE)
         p
       } else if(input$gw_subset == 'IQR') {
-        p <- plot_ly(data, y=~IQR, type = "scatter", mode = "markers", name = "Ordered IQR") %>%
-          add_trace(p, y = ~iqr_percen, line=list(dash=3, width= 1, color = "green"), mode = "lines", name ='Percentile cut-off' )
+        p <- plot_ly(data, y=~IQR, type = "scatter", mode = "markers", name = "Ordered IQR", color = I('chartreuse3')) %>%
+          add_trace(p, y = ~iqr_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name ='Percentile cut-off' )
         if (!is.na(goi[1])) {
           p<- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$IQR, text = input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
         }
@@ -416,8 +426,8 @@ function(input, output) {
         
         if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset) {
           
-          p <- plot_ly(data, y=~sumofranks, type = "scatter", mode = "markers", name = "Ordered sum of VAR, MAD and IQR") %>%
-            add_trace(p, y = ~IMVA_percen, line=list(dash=3, width= 1, color = "green"), mode = "lines", name = 'Percentile cut-off' ) 
+          p <- plot_ly(data, y=~sumofranks, type = "scatter", mode = "markers", name = "Ordered sum of VAR, MAD and IQR", colors = "grey") %>%
+            add_trace(p, y = ~IMVA_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off' ) 
           if (!is.na(goi[1])) {
             p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
           }
@@ -426,8 +436,8 @@ function(input, output) {
         }
         
         else if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & !("IQR" %in% input$gw_subset) ) {
-          p <- plot_ly(data, y=~sumofranks_VM, type = "scatter", mode = "markers", name = "Ordered sum of VAR and MAD") %>%
-            add_trace(p, y = ~var_mad_percen, line=list(dash=3, width= 1, color = "green" ), mode = "lines", name = 'Percentile cut-off'  )
+          p <- plot_ly(data, y=~sumofranks_VM, type = "scatter", mode = "markers", name = "Ordered sum of VAR and MAD", colors = "grey") %>%
+            add_trace(p, y = ~var_mad_percen, line=list(dash=3, width= 1, color = "grey" ), mode = "lines", name = 'Percentile cut-off'  )
           if (!is.na(goi[1])) {
             p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks_VM, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
           }
@@ -436,8 +446,8 @@ function(input, output) {
         }
         else if ("VAR" %in% input$gw_subset & "IQR" %in% input$gw_subset& !("MAD" %in% input$gw_subset)) {
           
-          p <- plot_ly(data, y=~sumofranks_VI, type = "scatter", mode = "markers", name = "Ordered sum of VAR and IQR") %>%
-            add_trace(p, y = ~var_iqr_percen, line=list(dash=3, width= 1, color = "green"), mode = "lines", name = 'Percentile cut-off'  )
+          p <- plot_ly(data, y=~sumofranks_VI, type = "scatter", mode = "markers", name = "Ordered sum of VAR and IQR", colors = "grey") %>%
+            add_trace(p, y = ~var_iqr_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off'  )
           if (!is.na(goi[1])) {
             p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks_VI, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
           }
@@ -445,8 +455,8 @@ function(input, output) {
           p
         }
         else if ("MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset & !("VAR" %in% input$gw_subset)) {
-          p <- plot_ly(data, y=~sumofranks_MI, type = "scatter", mode = "markers", name = "Ordered sum of MAD and IQR") %>%
-            add_trace(p, y = ~mad_iqr_percen, line=list(dash=3, width= 1, color = "green"), mode = "lines", name = 'Percentile cut-off'  )
+          p <- plot_ly(data, y=~sumofranks_MI, type = "scatter", mode = "markers", name = "Ordered sum of MAD and IQR", colors = "grey") %>%
+            add_trace(p, y = ~mad_iqr_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off'  )
           if (!is.na(goi[1])) {
             p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks_MI, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
           }
@@ -574,6 +584,7 @@ function(input, output) {
       col.groups <-  col.groups[as.numeric(input$DataC2):ncol(data2)] #col.groups[4:ncol(data)] 
       col.groups.name <- names(table(col.groups))
       number.col.groups <- length(col.groups.name)
+      check_number.col.groups <<- number.col.groups
       
       ## additional info on columns and rows
       colbar_data <-  as.matrix(t(data2[1:(as.numeric(input$DataR2)-2), c(1, (as.integer(input$DataC2)-1):ncol(data2))])) #t(data[1:(6-2), c(1, 3:ncol(data))]) 
@@ -582,7 +593,7 @@ function(input, output) {
       colnames(colbar_data)[1] <- "Groups"
       n.colbar_data <- ncol(colbar_data)
       
-      #check_colbar_data <<- colbar_data
+      check_colbar_data <<- colbar_data
       
       rowbar_data <- as.matrix(data2[(as.integer(input$DataR2)-1):nrow(data2), 1:(as.numeric(input$DataC2)-1)]) #as.matrix(data[5:nrow(data), 1:3])
       rownames(rowbar_data) <- rowbar_data[,1]
@@ -837,7 +848,7 @@ function(input, output) {
         } else if(input$dispRow == "No" & input$dispCol=='Yes' ) {
           hm <- heatmap.3(z[[1]], labRow=NA, scale="none", Rowv=eval(parse(text=paste(input$clust_byrow))), Colv=eval(parse(text=paste(input$clust_bycol))), hclust=function(x) hclust(x,method=input$hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$size1,cexCol =input$size2,key=TRUE,keysize=1.0, margin = c(input$inSlider2[1],input$inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 2, RowSideColorsSize = 1)
         } else if(input$dispRow == "Yes" & input$dispCol=='No') {
-          hm <- heatmap.3(z[[1]], labCol= NA, scale="none", Rowv=eval(parse(text=paste(input$clust_byrow))), Colv=eval(parse(text=paste(input$clust_bycol))), hclust=function(x) hclust(x,method=input$hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$size1,cexCol =input$size2,  key=TRUE,keysize=1.0, margin = c(input$inSlider2[1],input$inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars22, ColSideColorsSize = 2, RowSideColorsSize = 1)
+          hm <- heatmap.3(z[[1]], labCol= NA, scale="none", Rowv=eval(parse(text=paste(input$clust_byrow))), Colv=eval(parse(text=paste(input$clust_bycol))), hclust=function(x) hclust(x,method=input$hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$size1,cexCol =input$size2,  key=TRUE,keysize=1.0, margin = c(input$inSlider2[1],input$inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 2, RowSideColorsSize = 1)
         } else if(input$dispRow == "Yes" & input$dispCol=='Yes') {
           hm <- heatmap.3(z[[1]], Rowv=eval(parse(text=paste(input$clust_byrow))), Colv=eval(parse(text=paste(input$clust_bycol))), scale="none", hclust=function(x) hclust(x,method=input$hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$size1,cexCol =input$size2,key=TRUE,keysize=1.0, margin = c(input$inSlider2[1],input$inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 2, RowSideColorsSize = 1)
         }
@@ -1301,6 +1312,11 @@ function(input, output) {
           data_l1_l2_2 <- data_l1_l2_2[-1, c(1,2)]
           m2 <- merge(cuttable2, data_l1_l2_2, by = "gene_id", sort= F)
           m2 <- m2[, c(1, 3, 2)]
+          m2$order <- 1:nrow(m2)
+          m3 <- m2[order(-m2$order),]
+          rownames(m3) <- 1:nrow(m3)
+          m4 <- m3[, c(1,2, 3)]
+          
         }
         else {
           return(NULL)
@@ -1459,7 +1475,7 @@ function(input, output) {
       
       mv_data2 <- as.matrix(mv_data)
         
-      con <- consensus_clustering(dinput=mv_data2, mK=10, rep=as.integer(input$con_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$con_dist, iL=input$con_hclust, fL=input$con_hclust)
+      con <- consensus_clustering(dinput=mv_data2, mK=as.integer(input$con_maxK), rep=as.integer(input$con_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$con_dist, iL=input$con_hclust, fL=input$con_hclust)
       
       
       return(list(output= con[["output"]][[as.integer(input$con_opt_k)]]$consensusClass, data= con[["data"]], distance=con[["distance"]]))
@@ -1717,12 +1733,12 @@ function(input, output) {
        
        mv_data2 <- as.data.frame(mv_data)
        c_order2 <- as.data.frame(c_order)
-       names(c_order2)[2] <- "Cluster" 
+       names(c_order2)[2] <- "Sample" 
        
        check_mvdata <<- mv_data2
        check_corder2 <<- c_order2
        
-       k = unique(c_order2$Cluster)[length(unique(c_order2$Cluster))]
+       k = length(unique(c_order2$Cluster)) # unique(c_order2$Cluster)[length(unique(c_order2$Cluster))]
        
        if(input$sil_choice == 'Fixed value'){
          
@@ -1785,7 +1801,7 @@ function(input, output) {
         pdf(file=paste(pdf_file_con,".pdf",sep=""))
         mv_data <- mv_hm_data()$data
         mv_data2 <- as.matrix(mv_data)
-        con <- consensus_clustering(dinput=mv_data2, mK=10, rep=as.integer(input$con_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$con_dist, iL=input$con_hclust, fL=input$con_hclust)
+        con <- consensus_clustering(dinput=mv_data2, mK=as.integer(input$con_maxK), rep=as.integer(input$con_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$con_dist, iL=input$con_hclust, fL=input$con_hclust)
         #silhouette_plot2(data_use= consen()[["data"]], opt_k=as.integer(input$con_opt_k), res=consen()[["output"]], dist = consen()[["distance"]], upto_width= as.numeric(input$upto_slider))
         dev.off()
         file.copy(paste(pdf_file_con,'.pdf', sep='') ,file, overwrite=TRUE)
@@ -1807,6 +1823,8 @@ function(input, output) {
         
         data1 <- data1[,order(data1[1, ])]
         data2 <- data1[order(data1[,2]),]
+        
+        check_d2 <<- data2
         
         ### row groups
         gene <- as.character(data2$gene_id)
@@ -1841,6 +1859,7 @@ function(input, output) {
         rownames(data3) <- gene
         data4 <-data3[complete.cases(data3),]
         data <- data.matrix(data4)
+        check_d <<- data
         
       } else {
         
@@ -2619,11 +2638,11 @@ function(input, output) {
     cc_colDen <- reactive({
       if(input$cc_cutcolden == 'TRUE') {
         cuttable <- as.data.frame(cutree(as.hclust(core_mv_hm_data()$hm[[1]]$colDendrogram), k=as.numeric(input$cc_cuttree))[as.hclust(core_mv_hm_data()$hm[[1]]$colDendrogram)$order])
-        cuttable <- cbind.data.frame(rownames(cuttable), cuttable)
+        cuttable <- cbind.data.frame(rownames(cuttable), cuttable)                                                                                                                                             
         
         names(cuttable)[1] <- "Sample"
         names(cuttable)[2] <- "Cluster"
-        data_l1_l2 <- core_mv_hm_data()$data_use #extracted_data2()
+        data_l1_l2 <-  extracted_data2() #core_mv_hm_data()$data_use 
        
         data_l1_l2 <- data_l1_l2[1,c(-1, -2)]
         t_data_l1_l2 <- t(data_l1_l2)
@@ -2693,7 +2712,7 @@ function(input, output) {
     
     cc_rowDen <- reactive({
       if(input$cc_cutrowden == 'TRUE') {
-        cuttable2 <- as.data.frame(cutree(as.hclust(core_mv_hm_data()$hm[[1]]$rowDendrogram), k=as.integer(input$core_cuttree2))[as.hclust(mv_hm_data()$hm[[1]]$rowDendrogram)$order])
+        cuttable2 <- as.data.frame(cutree(as.hclust(core_mv_hm_data()$hm[[1]]$rowDendrogram), k=as.integer(input$cc_cuttree2))[as.hclust(mv_hm_data()$hm[[1]]$rowDendrogram)$order])
         cuttable2 <- cbind.data.frame(rownames(cuttable2), cuttable2)
         names(cuttable2)[1] <- "gene_id"
         names(cuttable2)[2] <- "Cluster"
@@ -2701,6 +2720,10 @@ function(input, output) {
         data_l1_l2_2 <- data_l1_l2_2[-1, c(1,2)]
         m2 <- merge(cuttable2, data_l1_l2_2, by = "gene_id", sort= F)
         m2 <- m2[, c(1, 3, 2)]
+        m2$order <- 1:nrow(m2)
+        m3 <- m2[order(-m2$order),]
+        rownames(m3) <- 1:nrow(m3)
+        m4 <- m3[, c(1,2, 3)]
       }
       else {
         return(NULL)
@@ -2910,7 +2933,7 @@ function(input, output) {
             sep = "\n", collapse = "" )
         }, if(input$button2){
           paste(
-            paste0("C --> D[Heatmap Parameters: <br/> <br/> Normalized by: ", as.character(input$GW_norm), "<br/> Scaling: ",as.character(input$GW_norm2), "<br/> Distance: ", as.character(input$GW_dist), "<br/> Clustering: ", as.character(input$GW_hclust), "]"),
+            paste0("C --> D[Heatmap Parameters: <br/> <br/> Normalized by: ", as.character(input$norm), "<br/> Scaling: ",as.character(input$norm2), "<br/> Distance: ", as.character(input$dist), "<br/> Clustering: ", as.character(input$hclust), "]"),
             sep = "\n", collapse = "" )
         }, if(input$button3){
           paste(
@@ -3922,7 +3945,9 @@ function(input, output) {
   output$com_text33 <- renderUI({
     hs1 <- paste("&emsp;")
     if("EXP" %in% input$coca_platform & "PROP" %in% input$coca_platform & "CNV" %in% input$coca_platform) {
-    hs2 <- paste("Stratified by CNV")
+    if(input$stratify_by == "Copy Number") { hs2 <- paste("Stratified by Copy Number") }
+    else if(input$stratify_by == "Expression") { hs2 <- paste("Stratified by Expression") }
+    else if(input$stratify_by == "Methylation/Variant") { hs2 <- paste("Stratified by Methylation/Variant") }
     HTML(paste(h4(hs2), hs1, sep = '<br/>'))
     }
   })
@@ -3985,6 +4010,7 @@ function(input, output) {
   
   output$foo <- renderRHandsontable({
     if(!is.null(combined())){
+     
       if("EXP" %in% input$coca_platform) {
         cc_clust1 <- as.matrix(indiv()[["output"]])
         cc_clust1 <- cbind(Sample = rownames(cc_clust1), cc_clust1)
@@ -4015,19 +4041,55 @@ function(input, output) {
       #plots
       if("EXP" %in% input$coca_platform & "PROP" %in% input$coca_platform & "CNV" %in% input$coca_platform) {
         
-        for(i in 1:length(unique(m1$CNV.Clust))) {
-           observed[[i]] <- as.data.frame.matrix(table(m1$Exp.Clust, m1$Variant.Clust, m1$CNV.Clust, dnn = c("EXP", "VAR"))[, , i])
-       }
+        if(input$stratify_by == "Copy Number") {
         
+        for(i in 1:length(unique(m1$CNV.Clust))) {
+           observed[[i]] <- as.data.frame.matrix(table(m1$Exp.Clust, m1$Variant.Clust, m1$CNV.Clust, dnn = c("EXP", "VAR"))[, ,i])
+          
+       }
+        check_obsCNV <<- observed
         obs <- cbind.data.frame(observed)
         rhandsontable(
           data.frame(obs),
           rowHeaders = paste("E", 1:length(unique(m1$Exp.Clust)), sep = ""),
           colHeaders = sort(apply(expand.grid(paste("CNV", 1:length(unique(m1$CNV.Clust)), sep = ""), paste(ifelse(input$dt_choice == "V", "V", "M"), 1:length(unique(m1$Variant.Clust)), sep = "")), 1, paste, collapse=""))
             #c(rep(paste("V", 1:length(unique(m1$Variant.Clust)), sep = ""), length(unique(m1$Variant.Clust))))
-         
+          ) %>%
+          hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE)
+      
+       } else if(input$stratify_by == "Expression") {
+         check_in_E <<- TRUE
+        
+        for(i in 1:length(unique(m1$Exp.Clust))) {
+          observed[[i]] <- as.data.frame.matrix(table(m1$Exp.Clust, m1$Variant.Clust, m1$CNV.Clust, dnn = c("VAR", "CNV"))[i, , ])
+         }
+        check_obsE <<- observed
+        obs <- cbind.data.frame(observed)
+        rhandsontable(
+          data.frame(obs),
+          rowHeaders = paste(ifelse(input$dt_choice == "V", "V", "M"), 1:length(unique(m1$Variant.Clust)), sep = ""),
+          colHeaders = sort(apply(expand.grid(paste("E", 1:length(unique(m1$Exp.Clust)), sep = ""), paste("CNV", 1:length(unique(m1$CNV.Clust)), sep = "")), 1, paste, collapse=""))
+          #c(rep(paste("V", 1:length(unique(m1$Variant.Clust)), sep = ""), length(unique(m1$Variant.Clust))))
+          
         ) %>%
           hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE)
+        
+       } else if(input$stratify_by == "Methylation/Variant") {
+         
+         for(i in 1:length(unique(m1$Variant.Clust))) {
+           observed[[i]] <- as.data.frame.matrix(table(m1$Exp.Clust, m1$Variant.Clust, m1$CNV.Clust, dnn = c("E", "CNV"))[, i, ])
+         }
+         check_obsV <<- observed
+         obs <- cbind.data.frame(observed)
+         rhandsontable(
+           data.frame(obs),
+           rowHeaders = paste("E", 1:length(unique(m1$Exp.Clust)), sep = ""),
+           colHeaders = sort(apply(expand.grid(paste(ifelse(input$dt_choice == "V", "V", "M"), 1:length(unique(m1$Variant.Clust)), sep = ""), paste("CNV", 1:length(unique(m1$CNV.Clust)), sep = "")), 1, paste, collapse=""))
+           #c(rep(paste("V", 1:length(unique(m1$Variant.Clust)), sep = ""), length(unique(m1$Variant.Clust))))
+           
+         ) %>%
+           hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE)
+       }
         
       } else if("EXP" %in% input$coca_platform & "PROP" %in% input$coca_platform & !("CNV" %in%input$coca_platform ) ) {
             observed <- as.data.frame.matrix(table(m1$Exp.Clust, m1$Variant.Clust))
@@ -4063,7 +4125,9 @@ function(input, output) {
         ) %>%
           hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE)
               
-              }
+      }
+      
+      
     } else {
       return(NULL)
     }
@@ -4134,23 +4198,23 @@ function(input, output) {
   output$download_Sig_Ex1 <- downloadHandler( 
     filename= function() {paste('Example data set_TCGA_BRCA_subset_data.csv')}, 
     content = function(file) {
-      d <- read.csv("data/TCGA_BRCA_Early_Late_OS_6.9years_IQR_99P_subset_data_SOC.csv", header = T, sep  = ",", stringsAsFactors = F)
+      d <- read.csv("data/TCGA_BRCA_Early_Late_OS_6.9years_IQR_99P_subset_data_SOC_use.csv", header = T, sep  = ",", stringsAsFactors = F)
       write.csv(d, file, row.names = FALSE) }
   )
   
   output$download_Sig_Ex2 <- downloadHandler( 
     filename= function() {paste('Example data set_CoMMpass_IA9_filtered_expression_ds.csv')}, 
     content = function(file) {
-      d <- read.csv("data/Most_variable_extracted_Expression_withHRgroups.csv", header = T, sep  = ",", stringsAsFactors = F)
+      d <- read.csv("data/Most_variable_extracted_Expression_withHRgroups_updated.csv", header = T, sep  = ",", stringsAsFactors = F)
       write.csv(d, file, row.names = FALSE) }
   )
   
   
   Sig_data_input <- reactive({
     if(input$Sig_file1 == 'Sig_Example2'){
-      d <- read.csv("data/Most_variable_extracted_Expression_withHRgroups.csv", header = T, sep  = ",", stringsAsFactors = F) 
+      d <- read.csv("data/Most_variable_extracted_Expression_withHRgroups_updated.csv", header = T, sep  = ",", stringsAsFactors = F) 
     } else if(input$Sig_file1 == 'Sig_Example1') {
-      d <- read.csv("data/TCGA_BRCA_Early_Late_OS_6.9years_IQR_99P_subset_data_SOC.csv", header = T, sep  = ",", stringsAsFactors = F)
+      d <- read.csv("data/TCGA_BRCA_Early_Late_OS_6.9years_IQR_99P_subset_data_SOC_use.csv", header = T, sep  = ",", stringsAsFactors = F)
     } else if(input$Sig_file1 == 'load_my_own_Sig'){
       inFile <- input$Sig_file2
       if (is.null(inFile))
@@ -4197,7 +4261,7 @@ function(input, output) {
       col.groups <-  col.groups[as.numeric(input$DataC):ncol(data)] #col.groups[4:ncol(data)] 
       col.groups.name <- names(table(col.groups))
       number.col.groups <- length(col.groups.name)
-      
+      ncg <<- number.col.groups
       ## additional info on columns and rows
       colbar_data <-  as.matrix(t(data[1:(as.numeric(input$DataR)-2), c(1, (as.integer(input$DataC)-1):ncol(data))])) #t(data[1:(6-2), c(1, 3:ncol(data))]) 
       colnames(colbar_data) <- as.character(unlist(colbar_data[1,]))
@@ -4230,7 +4294,7 @@ function(input, output) {
         colbars2 <- if(n.colbar_data ==1) as.matrix(cc1) else as.matrix(cbind(cc1, colbars(df2 = colbar_data)[[1]]))
         number.colbar.class <- if(n.colbar_data ==1) NULL else colbars(df2 = colbar_data)[[2]]
         names.colbar.class <- if(n.colbar_data ==1) NULL else colbars(df2 = colbar_data)[[3]]
-        colors_used <- if(n.colbar_data ==1) NULL else colbars(df2 = colbar_data)[[4]]
+        colors_used <- if(n.colbar_data ==1) as.matrix(cc1) else colbars(df2 = colbar_data)[[4]]
       } else if(number.col.groups==2) {
         cell <- c(rep(col.groups.name[1], table(col.groups)[[1]]), rep(col.groups.name[2],table(col.groups)[[2]]))
         cc1 <- rep(col1[50], length(cell))
@@ -4263,9 +4327,11 @@ function(input, output) {
         cc1[table(col.groups)[[1]]+table(col.groups)[[2]]+table(col.groups)[[3]]+1:table(col.groups)[[4]]] <- 'gray'
         colbars2 <- if(n.colbar_data ==1) as.matrix(cc1) else as.matrix(cbind(cc1, colbars(df2 = colbar_data)[[1]]))
         colnames(colbars2)[1] <- "Group"
-        number.colbar.class <- if(n.colbar_data ==1) NULL else colbars(df2 = colbar_data)[[2]]
-        names.colbar.class <- if(n.colbar_data ==1) NULL else colbars(df2 = colbar_data)[[3]]
-        colors_used <- if(n.colbar_data ==1) NULL else colbars(df2 = colbar_data)[[4]]
+        check_colbars2 <<- colbars2
+        check_cc1 <<- cc1
+        number.colbar.class <- if(n.colbar_data ==1) 1 else colbars(df2 = colbar_data)[[2]]
+        names.colbar.class <- if(n.colbar_data ==1) 1 else colbars(df2 = colbar_data)[[3]]
+        colors_used <- if(n.colbar_data ==1) cc1 else colbars(df2 = colbar_data)[[4]]
       } else if(number.col.groups==5) {
         cell <- c(rep(col.groups.name[1], table(col.groups)[[1]]), rep(col.groups.name[2],table(col.groups)[[2]]), rep(col.groups.name[3],table(col.groups)[[3]]), rep(col.groups.name[4],table(col.groups)[[4]]), rep(col.groups.name[5],table(col.groups)[[5]])) 
         cc1 <- rep(col1[50], length(cell))
@@ -4479,6 +4545,7 @@ function(input, output) {
         }
         
         
+       
         if(number.row.groups==1) {
           legend("bottomleft", legend = paste(row.groups.name), col = "black", lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$Sig_sizeRlable)
         } else if(number.row.groups==2) {
@@ -4493,7 +4560,8 @@ function(input, output) {
           legend("bottomleft", legend = paste(c(row.groups.name[1], row.groups.name[2], row.groups.name[3], row.groups.name[4], row.groups.name[5], row.groups.name[6])), col = c("black", "gray", "hotpink", "brown1","cyan", "maroon"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$Sig_sizeRlable)
         } 
         
-        if(number.colbar.class==1) {
+        if(!is.null(number.colbar.class)) {
+         if(number.colbar.class==1) {
           legend("bottomright", legend = paste(names.colbar.class), col = colors_used[1], lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
         } else if(number.colbar.class==2) {
           legend("bottomright", legend = paste(c(names.colbar.class[1], names.colbar.class[2])), col = c(colors_used[1], colors_used[2]), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
@@ -4506,7 +4574,7 @@ function(input, output) {
         } else if(number.colbar.class==6) {  
           legend("bottomright", legend = paste(c(names.colbar.class[1], names.colbar.class[2], names.colbar.class[3], names.colbar.class[4], names.colbar.class[5], names.colbar.class[6])), col = c(colors_used[1], colors_used[2], colors_used[3],colors_used[4], colors_used[5], colors_used[6]), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
         } 
-        
+        }
         
         
       }  else {
@@ -4556,8 +4624,9 @@ function(input, output) {
         } else if(number.row.groups==6) {  
           legend("bottomleft", legend = paste(c(row.groups.name[1], row.groups.name[2], row.groups.name[3], row.groups.name[4], row.groups.name[5], row.groups.name[6])), col = c("black", "gray", "hotpink", "brown1","cyan", "maroon"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$Sig_sizeRlable)
         }
+         k_ncc <<- number.colbar.class
         
-        
+         if(!is.null(number.colbar.class)) { 
         if(number.colbar.class==1) {
           legend("bottomright", legend = paste(names.colbar.class), col = colors_used[1], lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
         } else if(number.colbar.class==2) {
@@ -4571,6 +4640,7 @@ function(input, output) {
         } else if(number.colbar.class==6) {  
           legend("bottomright", legend = paste(c(names.colbar.class[1], names.colbar.class[2], names.colbar.class[3], names.colbar.class[4], names.colbar.class[5], names.colbar.class[6])), col = c(colors_used[1], colors_used[2], colors_used[3],colors_used[4], colors_used[5], colors_used[6]), lty= 1, lwd = 10, pt.cex = 1, cex = 0.9)
         } 
+         }
       }
       
       hm_data <- return(list(data = data, z = list(z), hm = list(Sig_hm ), col1=col1, colbars2 = colbars2, rowbars2 = rowbars2, number.col.groups = number.col.groups,number.row.groups=number.row.groups, row.groups.name=row.groups.name, col.groups.name= col.groups.name, number.colbar.class = number.colbar.class, names.colbar.class = names.colbar.class, colors_used = colors_used, number.rowbar.class= number.rowbar.class, names.rowbar.class = names.rowbar.class,  colors_used2 = colors_used2 ))
@@ -4584,13 +4654,13 @@ function(input, output) {
   tgplot3 <- function(z, col1, colbars2, rowbars2, number.col.groups, number.row.groups, row.groups.name , col.groups.name, number.colbar.class, names.colbar.class, colors_used, number.rowbar.class, names.rowbar.class,  colors_used2 ) { 
     if(input$Sig_dist == "pearson correlation") {
       if(input$Sig_dispRow == "No" & input$Sig_dispCol=='No') {
-        Sig_hm <- heatmap.3(z[[1]], labRow = NA, labCol= NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,  key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], labRow = NA, labCol= NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,  key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       } else if(input$Sig_dispRow == "No" & input$Sig_dispCol=='Yes' ) {
-        Sig_hm <- heatmap.3(z[[1]], labRow=NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], labRow=NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       } else if(input$Sig_dispRow == "Yes" & input$Sig_dispCol=='No') {
-        Sig_hm <- heatmap.3(z[[1]], labCol= NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,  key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], labCol= NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,  key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       } else if(input$Sig_dispRow == "Yes" & input$Sig_dispCol=='Yes') {
-        Sig_hm <- heatmap.3(z[[1]], Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), scale="none", hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), scale="none", hclust=function(x) hclust(x,method=input$Sig_hclust), distfun=function(x) as.dist((1-cor(t(x)))),cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       }
       
       if(number.col.groups==1) {
@@ -4664,13 +4734,13 @@ function(input, output) {
       
     }  else {
       if(input$Sig_dispRow == "No" & input$Sig_dispCol=='No') {
-        Sig_hm <- heatmap.3(z[[1]], labRow=NA, labCol = NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], labRow=NA, labCol = NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       } else if(input$Sig_dispRow == "No" & input$Sig_dispCol=='Yes') {
-        Sig_hm <- heatmap.3(z[[1]], labRow=NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], labRow=NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       } else if(input$Sig_dispRow == "Yes" & input$Sig_dispCol=='No') {
-        Sig_hm <- heatmap.3(z[[1]], labCol = NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], labCol = NA, scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       } else if(input$Sig_dispRow == "Yes" & input$Sig_dispCol=='Yes') {
-        Sig_hm <- heatmap.3(z[[1]], scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 1, RowSideColorsSize = 1)
+        Sig_hm <- heatmap.3(z[[1]], scale="none", Rowv=eval(parse(text=paste(input$Sig_clust_byrow))), Colv=eval(parse(text=paste(input$Sig_clust_bycol))), hclust=function(c) {hclust(c,method=input$Sig_hclust)}, distfun=function(c) {dist(c,method=input$Sig_dist)},cexRow=input$Sig_size1,cexCol =input$Sig_size2,key=TRUE,keysize=1.0, margin = c(input$Sig_inSlider2[1],input$Sig_inSlider2[2]), density.info=c("none"),trace=c("none"),col=col1,ColSideColors=colbars2, RowSideColors = rowbars2, ColSideColorsSize = 3, RowSideColorsSize = 1)
       }
       
       
@@ -4789,8 +4859,8 @@ function(input, output) {
           legend("topright", legend = paste(c(sig_hm_plot()$col.groups.name[1], sig_hm_plot()$col.groups.name[2], sig_hm_plot()$col.groups.name[3])), col = c("firebrick4", "dodgerblue", "khaki1"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$Sig_sizeClable)
         } else if(sig_hm_plot()$number.col.groups==4) {  
           legend("topright", legend = paste(c(sig_hm_plot()$col.groups.name[1], sig_hm_plot()$col.groups.name[2], sig_hm_plot()$col.groups.name[3], sig_hm_plot()$col.groups.name[4])), col = c("firebrick4", "dodgerblue", "khaki1", "gray"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$Sig_sizeClable)
-        } else if(sig_hm_plot()$nnumber.col.groups==5) {  
-          legend("topright", legend = paste(c(sig_hm_plot()$col.groups.name[1], col.groups.name[2], sig_hm_plot()$col.groups.name[3], sig_hm_plot()$col.groups.name[4], sig_hm_plot()$col.groups.name[5])), col = c("firebrick4", "dodgerblue", "khaki1", "purple"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$Sig_sizeClable)
+        } else if(sig_hm_plot()$number.col.groups==5) {  
+          legend("topright", legend = paste(c(sig_hm_plot()$col.groups.name[1], sig_hm_plot()$col.groups.name[2], sig_hm_plot()$col.groups.name[3], sig_hm_plot()$col.groups.name[4], sig_hm_plot()$col.groups.name[5])), col = c("firebrick4", "dodgerblue", "khaki1", "purple"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$Sig_sizeClable)
         } else if(sig_hm_plot()$number.col.groups==6) {  
           legend("topright", legend = paste(c(sig_hm_plot()$col.groups.name[1], sig_hm_plot()$col.groups.name[2], sig_hm_plot()$col.groups.name[3], sig_hm_plot()$col.groups.name[4], sig_hm_plot()$col.groups.name[5], sig_hm_plot()$col.groups.name[6])), col = c("firebrick4", "dodgerblue", "khaki1", "gray", "purple", "darkgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
         } else if(sig_hm_plot()$number.col.groups==7) {  
@@ -4889,9 +4959,9 @@ function(input, output) {
             if(input$Sig_pvalue_cal == TRUE) 
             {
               if(input$Sig_file3 == 'Sig_Exp.Example'){
-                s_data <- read.csv("data/GW_TCGA_BRCA_Early_Late_OS_6.9years_Core_samples_for_SoC.csv", header = T, sep = ",", stringsAsFactors = F)
+                s_data <- read.csv("data/GW_TCGA_BRCA_Early_Late_OS_6.9years_Core_samples_for_SoC_use.csv", header = T, sep = ",", stringsAsFactors = F)
               } else if(input$Sig_file3 == 'Sig_Exp.Example1') {
-                s_data <- readRDS("data/CoMMpassIA9_GW_Expression_data.rds")
+                s_data <- readRDS("data/CoMMpassIA9_GW_Expression_data_SoC.rds")
                 #s_data <- readRDS("data/Meth27K.GW.BRCA.Example.data.rds")
               } else {
                 inFile2 <- input$Sig_file4
@@ -4918,16 +4988,27 @@ function(input, output) {
               }
               
               
+              check_obsdata <<- mer
+              check_samplingdata <<- s_data
+              check_distmethod <<- input$Sig_dist
+              check_clustmethod <<- input$Sig_hclust
+              check_norm <<- input$Sig_norm 
+              check_scale <<- input$Sig_norm2 
+              check_n <<- as.numeric(input$Sig_n) 
+              check_k <<- as.numeric(input$Sig_cuttree)
+              check_n.iter <<- input$Sig_n_iter 
+              check_zlim <<- c(input$Sig_inSlider[1],input$Sig_inSlider[2]) 
+              check_sampler <<-  "Column"
               
-              # Bootstrap data, and pass in the updateProgress function so that it can update the progress indicator.
+              
               Sig_b1 <<- bootstrapfun(obsdata=mer, samplingdata=s_data, distmethod = input$Sig_dist, clustmethod= input$Sig_hclust, norm= input$Sig_norm, scale=input$Sig_norm2, n=as.numeric(input$Sig_n), k=as.numeric(input$Sig_cuttree), n.iter=input$Sig_n_iter, zlim=c(input$Sig_inSlider[1],input$Sig_inSlider[2]), sampler = "Column", updateProgress )
               
               hstring1 <- paste("&emsp;")
               hstring2 <- paste("The p-value to test the gene set significance in the separation of specimens into 2 clusters is =", Sig_b1$p.value, sep = " ")
               if(Sig_b1$p.value <= 0.05) {
-                hstring3  <- paste("The gene set cluster is statistically significant, i.e., a random sample of CpG probes/gene sets of the same number is Not able to separate the specimens when compared to the CpG probes/gene sets of interest of the same class")
+                hstring3  <- paste("The gene set of interest is able to separate sample groups, outperforming ", input$Sig_n_iter, " random samples of genes of the same number in this regard.", sep = "")
               } else {
-                hstring3  <- paste("The gene set cluster is NOT statistically significant, i.e., a random sample of CpG probes/gene sets of the same number is able to separate the specimens when compared to the CpG probes/gene sets of interest of the same class")
+                hstring3  <- paste(input$Sig_n_iter, " random samples of genes of the same number are able to separate sample groups, outperforming the gene set of interest in this regard.", sep = "")
               }
               
               HTML(paste(hstring1, h5(strong(hstring2)), h5(em(hstring3)), hstring1, hstring1,  sep = '<br/>'))
@@ -4981,6 +5062,10 @@ function(input, output) {
           data_l1_l2_2 <- data_l1_l2_2[-1, c(1,2)]
           m2 <- merge(cuttable2, data_l1_l2_2, by = "gene_id", sort= F)
           m2 <- m2[, c(1, 3, 2)]
+          m2$order <- 1:nrow(m2)
+          m3 <- m2[order(-m2$order),]
+          rownames(m3) <- 1:nrow(m3)
+          m4 <- m3[, c(1,2, 3)]
         }
         else {
           return(NULL)
@@ -5033,9 +5118,9 @@ function(input, output) {
             if(input$Sig_pvalue_cal2 == 'TRUE') 
             {
               if(input$Sig_file5 == 'Sig_Exp.Example2') {
-                s_data <- read.csv("data/GW_TCGA_BRCA_Early_Late_OS_6.9years_Core_samples_for_SoC.csv", header = T, sep = ",", stringsAsFactors = F)
+                s_data <- read.csv("data/GW_TCGA_BRCA_Early_Late_OS_6.9years_Core_samples_for_SoC_use.csv", header = T, sep = ",", stringsAsFactors = F)
               } else if(input$Sig_file5 == 'Sig_Exp.Example21') {
-                s_data <- readRDS("data/CoMMpassIA9_GW_Expression_data.rds")
+                s_data <- readRDS("data/CoMMpassIA9_GW_Expression_data_SoC.rds")
                 #s_data <- readRDS("data/Meth27K.GW.BRCA.Example.data.rds")
               } else {
                 inFile3 <- input$Sig_file6
@@ -5069,9 +5154,9 @@ function(input, output) {
               rhstring1 <- paste("&emsp;")
               rhstring2 <- paste("The p-value to test the sample significance in the separation of sample into 2 clusters is = =", Sig_b2$p.value, sep = " ")
               if(Sig_b2$Sig_p.value <= 0.05) {
-                hstring3  <- paste("The cluster is statistically significant, i.e., a random sample of Sample sets of the same number is Not able to separate the gene sets when compared to the samples of interest of the same class")
+                hstring3  <- paste("The sample set of interest is able to separate gene groups, outperforming ", input$Sig_n_iter2, " random samples of the same number in this regard.", sep = "")
               } else {
-                hstring3  <- paste("The cluster is NOT statistically significant, i.e., a random sample of Sample sets of the same number is able to separate the gene sets when compared to the samples of interest of the same class")
+                hstring3  <- paste(input$Sig_n_iter2, " random samples of genes of the same number are able to separate sample groups, outperforming the gene set of interest in this regard.", sep = "")
               }
               
               HTML(paste(rhstring1, h5(strong(rhstring2)), h5(em(rhstring3)), rhstring1, rhstring1,  sep = '<br/>'))
@@ -5184,13 +5269,14 @@ function(input, output) {
             plot.new()
             
             title("Significance of Column Cluster", cex.main=2)
-            df2 <- rbind.data.frame(c("Observed Data Fisher's exact p-value ", Sig_b1$p.obs),
-                                    c("Sample Iterations", input$Sig_n_iter),
-                                    c("Number of bootstrap Samples with replacement", input$Sig_n),
-                                    c("Monte Carlo p-value", Sig_b1$p.value ), 
-                                    c("Interpretation", ifelse(Sig_b1$p.value <= 0.05, paste("The CpG island/ gene set cluster is statistically significant", "i.e., a random sample of CpG probes/gene sets of the same number", " is Not able to separate the Sample groups when compared", "to the CpG islands/gene sets of interest", sep = '\n'), paste("The CpG island/ gene set cluster is NOT statistically significant", "i.e., a random sample of CpG probes/gene sets of the same number", " is able to separate the Sample groups when compared", "to the CpG islands/gene sets of interest", sep = '\n') ))
+            df2 <- rbind.data.frame(c("Fisher's Exact Test p-value ", ifelse(Sig_b1$p.obs < 0.001, "<0.001", ifelse(Sig_b1$p.obs < 0.01, "<0.01", round(Sig_b1$p.obs, 3)))),
+                                    c("Gene-Set size", input$Sig_n),
+                                    c("Number of bootstrap samples", input$Sig_n_iter),
+                                    c("Monte Carlo p-value", ifelse(Sig_b1$p.value < 0.001, "<0.001", ifelse(Sig_b1$p.value < 0.01, "<0.01", round(Sig_b1$p.value, 3)))),#Sig_b1$p.value ), 
+                                    c("Interpretation", ifelse(Sig_b1$p.value <= 0.05, paste("The gene set of interest is able to", "separate sample groups,", paste("outperforming ", input$Sig_n_iter, " random samples of genes", sep = ""), "of the same number in this regard.", sep = '\n'), paste(paste(input$Sig_n_iter, " random samples of genes", sep = ""), "of the same number are able", "to separate sample groups outperforming", "the gene set of interest in this regard.", sep = '\n') ))
+                                    
             )
-            names(df2)[1] <- "Bootstrap approach parameters"
+            names(df2)[1] <- "Summary"
             names(df2)[2] <- "Value"
             grid.table(df2, rows= NULL)
           }
@@ -5198,13 +5284,14 @@ function(input, output) {
           if(input$Sig_goButton2) {
             plot.new()
             title("Significance of Row Cluster", cex.main=2)
-            df3 <- rbind.data.frame(c("Observed Data Fisher's exact p-value", Sig_b2$p.obs),
-                                    c("Sample Iterations", input$Sig_n_iter2),
-                                    c("Number of bootstrap Samples with replacement", input$Sig_n2),
-                                    c("Monte Carlo p-value", Sig_b2$p.value ),
-                                    c("Interpretation", ifelse(Sig_b2$p.value <= 0.05, paste("The Sample cluster is statistically significant", "i.e., a random sample of Sample groups of the same number", " is Not able to separate the CpG islands/ gene sets when compared", "to the Sample groups of interest", sep = '\n'), paste("The Sample cluster is NOT statistically significant", "i.e., a random sample of Sample groups of the same number", " is able to separate the CpG islands/ gene sets when compared", "to the Sample groups of interest", sep = '\n') ))
+            df3 <- rbind.data.frame(c("Fisher's Exact Test p-value", ifelse(Sig_b2$p.obs < 0.001, "<0.001", ifelse(Sig_b2$p.obs < 0.01, "<0.01", round(Sig_b2$p.obs, 3)))),
+                                    c("Sample-set size", input$Sig_n2),
+                                    c("Number of bootstrap samples", input$Sig_n_iter2),
+                                    c("Monte Carlo p-value", ifelse(Sig_b2$p.value < 0.001, "<0.001", ifelse(Sig_b2$p.value < 0.01, "<0.01", round(Sig_b2$p.value, 3)))),
+                                    c("Interpretation", ifelse(Sig_b2$p.value <= 0.05, paste("The sample set of interest is able to", "separate gene groups,", paste("outperforming", input$Sig_n_iter2, " random genes of the ", sep = ""), "same number in this regard.", sep = '\n'), paste(paste(input$Sig_n_iter2, " random samples of the same", sep = ""), "number are able ", "to separate gene groups outperforming", "the sample groups of interest in this regard.", sep = '\n') ))
+                                   
             )
-            names(df3)[1] <- "Bootstrap approach parameters"
+            names(df3)[1] <- "Summary"
             names(df3)[2] <- "Value"
             grid.table(df3, rows= NULL)
           }
