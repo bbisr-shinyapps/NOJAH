@@ -67,7 +67,7 @@ fluidPage(
                                   radioButtons("IMVA_PercenChoice", "Percentile", c("Percentile Slider" = "Percentile Slider", "Manually Enter Percentile" = "Manually Enter Percentile")), ###
                                   conditionalPanel(condition = "input.IMVA_PercenChoice == 'Percentile Slider'",
                                                    sliderInput("IMVA_pslider", "Percentile Value:", 
-                                                               min=0, max=100, value=45)),
+                                                               min=0, max=100, value=75)),
                                   conditionalPanel(condition = "input.IMVA_PercenChoice == 'Manually Enter Percentile'",
                                                    numericInput("IMVA_pInput", label = "Percentile value", min = 0, max = 100, value = 95, step = 5))),
                  conditionalPanel(condition = "$.inArray('VAR', input.gw_subset) > -1 & $.inArray('MAD', input.gw_subset) > -1 & $.inArray('IQR', input.gw_subset) <= -1",
