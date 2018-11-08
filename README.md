@@ -24,7 +24,7 @@ Firstly, you should have the most recent version of R or RStudio.
 Next install required packages. Cut and paste what's below in an R session.
 
 ``` R
-install.packages(c("shiny", "shinythemes", "plotly", "RColorBrewer", "gplots", "gdata",  "plyr",  "DT", "ggplot2",  "dendextend", "colourpicker", "cluster", "reshape", "gridExtra", "DiagrammeR", "changepoint", "rhandsontable", "matrixStats"))
+install.packages(c("shiny", "shinythemes", "shinycssloaders", "plotly", "RColorBrewer", "gplots", "gdata",  "plyr",  "DT", "ggplot2",  "dendextend", "colourpicker", "cluster", "reshape", "gridExtra", "DiagrammeR", "changepoint", "rhandsontable", "matrixStats"))
 source("http://bioconductor.org/biocLite.R")
 biocLite("impute")
 biocLite("ConsensusClusterPlus")
