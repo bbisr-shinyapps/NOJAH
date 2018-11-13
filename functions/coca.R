@@ -21,7 +21,7 @@ coca <- function(cc, type, opt_k, coca_reps, clust, dist, coca_opt_k) {
   
   finalcc <- consensus_clustering(dinput=data_in, mK=10, rep=coca_reps, pI=0.8, pF= 1, cAlg="hc", dist=dist, iL=clust, fL=clust)
  
-  return(list(output= finalcc[["output"]][[coca_opt_k]]$consensusClass, data= data_in, distance = finalcc[["distance"]] ))
+  return(list(output= finalcc[["output"]][[coca_opt_k]]$consensusClass, data= data_in, distance = finalcc[["distance"]], data_in = data_in))
 }
 
 
