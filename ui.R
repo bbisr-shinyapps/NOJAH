@@ -1,5 +1,6 @@
 library(shiny)
 library(shinythemes)
+library(shinycssloaders)
 library(plotly)
 library(RColorBrewer)
 library(gplots)
@@ -59,9 +60,12 @@ fluidPage(
                  conditionalPanel("input.gw_file1 == 'GW_Example1'", downloadButton('download_GW_Ex1', 'Download GW TCGA BRCA Expression DataSet'))
                  
                  ),
-                br(), br(), br(), br(), br(), br(), br(), br(), 
+                #br(), br(), br(), br(), br(), br(), br(), br(), 
                 br(), br(), br(), br(), br(),
-                wellPanel(h3("Data Subsetting"),
+                wellPanel(h3("Genome-Wide Dendrogram Display"),
+                   radioButtons("PlotGW", "Plot GW Dendrogram (May take up to a few minutes to load)", c("No" = FALSE, "Yes" = TRUE))
+                  ),
+                 wellPanel(h3("Data Subsetting"),
                  checkboxGroupInput("gw_subset","Subset GW data by:",choices = list("Variance"= "VAR","Median Absoute Deviation" = "MAD", "Inter Quartile Range" = "IQR"), selected = c("IQR")),
                  conditionalPanel(condition = "$.inArray('VAR', input.gw_subset) > -1 & $.inArray('MAD', input.gw_subset) > -1 & $.inArray('IQR', input.gw_subset) > -1",
                                   radioButtons("IMVA_PercenChoice", "Percentile", c("Percentile Slider" = "Percentile Slider", "Manually Enter Percentile" = "Manually Enter Percentile")), ###
@@ -120,7 +124,8 @@ fluidPage(
                                                    numericInput("iqr_pInput", label = "Percentile value", min = 0, max = 100, value = 75, step = 5))
                    ),
                   
-                 actionButton("button1", "Run Analysis")
+                 actionButton("button1", "Run Analysis"),
+                 h5("Hit button to update results after each change in input parameter(s)")
                  ),
                 
                wellPanel(h3("Download subset data"),
@@ -136,7 +141,8 @@ fluidPage(
                          conditionalPanel("input.gw_file_1 == 'GW_Example_1'", downloadButton('download_GW_Ex_1', 'Download subset Pre-existing DS')),
                          br(),
                          br(),
-                         actionButton("button2", "Run Analysis")
+                         actionButton("button2", "Run Analysis"),
+                         h5("Hit button to update results after each change in input parameter(s)")
                ),
                
                conditionalPanel("input.gw_file_1 == 'load_my_own_gw_subset_1'",
@@ -163,7 +169,8 @@ fluidPage(
                 conditionalPanel("input.gw_file3 == 'GW_Example3'", downloadButton('download_GW_Ex3', 'Download subset Pre-existing DS')),
                 br(),
                 br(),
-                actionButton("button3", "Run Analysis")
+                actionButton("button3", "Run Analysis"),
+                h5("Hit button to update results after each change in input parameter(s)")
                ),
               
                 conditionalPanel("input.conditionedPanels == 1", 
@@ -187,7 +194,8 @@ fluidPage(
                            conditionalPanel("input.gw_file7 == 'GW_Example7'", downloadButton('download_GW_Ex7', 'Download subset Pre-existing silhouette clusters')),
                            br(),
                            br(),
-                           actionButton("button4", "Run Analysis")
+                           actionButton("button4", "Run Analysis"),
+                           h5("Hit button to update results after each change in input parameter(s)")
                             
                 ),
                 wellPanel(h3("Download Silhouette Core Samples"),
@@ -208,7 +216,8 @@ fluidPage(
                          br(),
                         
                          #conditionalPanel("input.gw_file9 == 'Core_data'", downloadButton('download_cc_Ex1', 'Download DS'))
-                         actionButton("button5", "Run Analysis")
+                         actionButton("button5", "Run Analysis"),
+                         h5("Hit button to update results after each change in input parameter(s)")
                                ),
                conditionalPanel("input.gw_file9 == 'load_my_own_core'",
                wellPanel(h3("Input Settings"),
@@ -245,7 +254,7 @@ fluidPage(
                                  <p> 3. <i> Define Cluster Number </i> <br>
                                  <p> 4. <i> Define Core Samples </i> </font> <br>
                                  <p> Heatmap is <i> <font color = '#338AFF'> updated</i> </font> based on the Core Features with Core Samples. <br> <br>
-                                 <p> However each of these components are not dependent on each other and can be used independently. </h3> <br> <br> <br>"
+                                 <p> When using the analysis workflow, each step of the workflow is intended to be used sequentially i.e. the output of step 1 is fed into step 2 as input and so on. However each of these components can also be used independently.For example, if only consensus clustering needs to be performed then the 'Cluster Number' tab can be used. </h3> <br> <br> <br>"
                                  )),
                        
                        tags$head(tags$style(type="text/css", "
@@ -265,41 +274,45 @@ fluidPage(
                                            ")),
               tabsetPanel(type = "tabs", 
                 tabPanel("Core Features",
-                     h3(strong("Genome-Wide Dendrogram")),
-                     plotOutput("gw_dend", height = 500),
+                     conditionalPanel(condition= "input.PlotGW == 'TRUE'" , 
+                        h3(strong("Genome-Wide Dendrogram")),
+                        plotOutput("gw_dend", height = 500) %>% withSpinner(color = "#0275D8") #color="#0dc5c1")
+                        ),
                      h3(strong("Measures of Spread")),
-                     plotlyOutput("Boxplot"), 
+                     #plotlyOutput("Boxplot") %>% withSpinner(color="#0275D8"), 
+                     plotOutput("Boxplot") %>% withSpinner(color="#0275D8"),
                      h3(strong("Define Core Features with Most Variable Approach")),
-                     h5(em("To see the position of your 'gene of interest', use the 'Choose Option' drop down to the right")),
-                     plotlyOutput("GW_Scatter_LH"),
+                     h5(em("To see the position of your 'gene of interest', enter gene id in the text box to the right")),
+                     #plotlyOutput("GW_Scatter_LH") %>% withSpinner(color="#0275D8"),
+                     plotOutput("GW_Scatter_LH") %>% withSpinner(color="#0275D8"),
                      htmlOutput("n_selected"), 
                      conditionalPanel(condition="input.button1 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1),
                 tabPanel("Heatmap",
                      h3(strong("Heatmap of Core Features")),
                      tabsetPanel(type = "tabs", 
-                       tabPanel("Heatmap", plotOutput("GW_subset_heatmap", height = 1200), 
+                       tabPanel("Heatmap", withSpinner(plotOutput("GW_subset_heatmap", height = 1200)), 
                                 conditionalPanel(condition="input.button2 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
-                       tabPanel("Column Dendrogram",plotOutput("plot1", height = 800), htmlOutput("display"), br(), DT::dataTableOutput("df"), 
+                       tabPanel("Column Dendrogram",withSpinner(plotOutput("plot1", height = 800)), htmlOutput("display"), br(), DT::dataTableOutput("df"), 
                                 conditionalPanel(condition="(input.button2 & input.button2) & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
-                       tabPanel("Row Dendrogram",plotOutput("plot2", height = 800), htmlOutput("display2"), br(), DT::dataTableOutput("df2"),  
+                       tabPanel("Row Dendrogram",withSpinner(plotOutput("plot2", height = 800)), htmlOutput("display2"), br(), DT::dataTableOutput("df2"),  
                                 conditionalPanel(condition="input.button2 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3), 
                        id = "conditionedPanels"), value =2),
                 tabPanel("Cluster Number",
                      h3(strong("Define Number of Clusters")),
-                     plotOutput("gw_cc", height = 600, width = 2400), 
+                     plotOutput("gw_cc", height = 600, width = 2400) %>% withSpinner(color = "#0275D8"), 
                      conditionalPanel(condition="input.button3 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 3),
                 tabPanel("Core Samples",
                      h3(strong("Define Core Samples")),
-                     plotOutput("gw_core_sam", height = 1800), 
+                     plotOutput("gw_core_sam", height = 1800) %>% withSpinner(color = "#0275D8"), 
                      conditionalPanel(condition="input.button4 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value= 4),
                 tabPanel("Updated Heatmap",
                      h3(strong("Heatmap of Core Features with Core Samples")),
                      tabsetPanel(type = "tabs", 
-                                 tabPanel("Heatmap", plotOutput("cc_GW_subset_heatmap", height = 1200), 
+                                 tabPanel("Heatmap", withSpinner(plotOutput("cc_GW_subset_heatmap", height = 1200)), 
                                           conditionalPanel(condition="input.button5 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
-                                 tabPanel("Column Dendrogram",plotOutput("cc_plot1", height = 800), htmlOutput("cc_display"), br(), DT::dataTableOutput("cc_df"), 
+                                 tabPanel("Column Dendrogram",withSpinner(plotOutput("cc_plot1", height = 800)), htmlOutput("cc_display"), br(), DT::dataTableOutput("cc_df"), 
                                           conditionalPanel(condition="input.button5 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
-                                 tabPanel("Row Dendrogram",plotOutput("cc_plot2", height = 800), htmlOutput("cc_display2"), br(), DT::dataTableOutput("cc_df2"), 
+                                 tabPanel("Row Dendrogram",withSpinner(plotOutput("cc_plot2", height = 800)), htmlOutput("cc_display2"), br(), DT::dataTableOutput("cc_df2"), 
                                           conditionalPanel(condition="input.button5 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3),
                                  id = "cc_conditionedPanels"), value= 5),
                 tabPanel("Workflow",
@@ -311,10 +324,13 @@ fluidPage(
       
                      ),
                column(2, 
+                
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                       br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
                       br(), br(), br(), br(), br(), br(), br(),
-                 conditionalPanel("input.gw_conditionedPanels == 1",
+                   
+                    conditionalPanel("input.gw_conditionedPanels == 1",
+                      conditionalPanel(condition= "input.PlotGW == 'TRUE'" ,
                       ########## GW dendrogram options ##########
                       wellPanel(  
                       h4("Genome-Wide Dendrogram Options"),
@@ -329,12 +345,21 @@ fluidPage(
                       selectInput("GW_hclust", "Agglomerative Linkage Method", 
                                   c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "ward.D"),
                       sliderInput("gw_dend_size", "Dendrogram Label size:", min=0, max=1, value=0.4)
-                      ),
-                      #selectInput("GW_outliers", "Feature outliers", c("Include", "Exclude"), selected = "Exclude"),
-                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                      )),
                      br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
-                     br(), br(), br(),
-                    uiOutput(outputId="geneSelector", width=NULL) ),
+                     br(), br(), br(), br(), br(), br(), br(), br(), br(), br(),
+                     
+                     br(), br(), br(),  br(), br(), br(), br(), br(), br(),
+                     #wellPanel(h3("Gene Display"),
+                    #        radioButtons("Sgene", "Would you like to annotate genes on the scatter plot ?", c("No" = FALSE, "Yes" = TRUE))
+                    # ),
+                     #conditionalPanel(condition = "input.Sgene == 'TRUE'",
+                                   #uiOutput(outputId="geneSelector", width=NULL)
+                                   textInput("Genes", "Enter the 'gene id' you wish to annotate. Please note that input is case sensitive. Entering only gene name instead of gene id will throw error. For example, when using preloaded data enter: SCGB1D2>ENSG00000124935.3", value = ""),
+                                   textOutput("text1")
+                     #)
+                  ),
+                    
                  conditionalPanel("input.gw_conditionedPanels == 2",
                     conditionalPanel("input.conditionedPanels == 1", 
                        wellPanel(  
@@ -564,27 +589,31 @@ fluidPage(
                             selectInput("Exp_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"),
                             radioButtons("Exp_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 100),
                             br(),
-                            actionButton("button6", "Run Analysis")),
+                            actionButton("button6", "Run Analysis"),
+                            h5("Hit button to update results after each change in input parameter(s)")),
                           conditionalPanel("input.cPanels1 == 2",      
                             selectInput("Variant_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "pearson"), #"manhattan"
                             selectInput("Variant_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "average"), #"average"
                             radioButtons("Variant_pItems", "No. of iterations", choices = c(50,100, 500, 1000), selected = 100),
                             br(),
-                            actionButton("button7", "Run Analysis")),
+                            actionButton("button7", "Run Analysis"),
+                            h5("Hit button to update results after each change in input parameter(s)")),
                           conditionalPanel("input.cPanels1 == 3",      
                             selectInput("CNV_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "canberra"),
                             selectInput("CNV_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "mcquitty"),
                             radioButtons("CNV_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 100),
                             br(),
-                            actionButton("button8", "Run Analysis")),
+                            actionButton("button8", "Run Analysis"),
+                            h5("Hit button to update results after each change in input parameter(s)")),
                           conditionalPanel("input.cPanels1 == 4",
                             checkboxGroupInput("coca_platform","Perform CrC analysis using", choices = list("Expression"= "EXP","Methylation/Variant" = "PROP", "Copy Number" = "CNV"), selected = c("EXP", "PROP", "CNV")),
                             h6("Select atleast two platforms to run CrC analysis"),
-                            selectInput("coca_dist","Distance Measure",choices = c("pearson", "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean"),
+                            selectInput("coca_dist","Distance Measure",choices = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski"), selected = "euclidean"),
                             selectInput("coca_hclust", "Clustering Method", c("average", "complete", "ward.D", "ward.D2", "single", "mcquitty", "median", "centroid"), selected = "ward.D"),
                             radioButtons("coca_pItems", "No. of iterations", choices = c(50, 100, 500, 1000), selected = 100),
                             br(),
-                            actionButton("button9", "Run Analysis"))
+                            actionButton("button9", "Run Analysis"),
+                            h5("Hit button to update results after each change in input parameter(s)"))
                           
                       ),
                       conditionalPanel("input.cPanels1 == 4",
@@ -650,17 +679,17 @@ fluidPage(
                                            ")),
                     
                       tabsetPanel(type = "tabs", 
-                                  tabPanel("Expresssion", htmlOutput("com_text1"), plotOutput("Exp_cc", height = 500), br(), htmlOutput("com_text2"), plotOutput("Exp_sil", height = 800), 
+                                  tabPanel("Expresssion", htmlOutput("com_text1"), withSpinner(plotOutput("Exp_cc", height = 500)), br(), htmlOutput("com_text2"), withSpinner(plotOutput("Exp_sil", height = 800)), 
                                       conditionalPanel(condition="input.button6 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=1), 
-                                  tabPanel("Methylation/Variant", htmlOutput("com_text12"), plotOutput("Variant_cc", height = 500), br(), htmlOutput("com_text22"), plotOutput("Variant_sil", height = 800), 
+                                  tabPanel("Methylation/Variant", htmlOutput("com_text12"), withSpinner(plotOutput("Variant_cc", height = 500)), br(), htmlOutput("com_text22"), withSpinner(plotOutput("Variant_sil", height = 800)), 
                                            conditionalPanel(condition="input.button7 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
-                                  tabPanel("Copy Number", htmlOutput("com_text13"), plotOutput("CNV_cc", height = 500), br(), htmlOutput("com_text23"), plotOutput("CNV_sil", height = 800),  
+                                  tabPanel("Copy Number", htmlOutput("com_text13"), withSpinner(plotOutput("CNV_cc", height = 500)), br(), htmlOutput("com_text23"), withSpinner(plotOutput("CNV_sil", height = 800)),  
                                            conditionalPanel(condition="input.button8 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =3),
-                                  tabPanel("Cluster of Clusters (CoC) Analysis", htmlOutput("com_text14"), plotOutput("coca_cc", height = 500), br(),htmlOutput("com_text3"), plotOutput("coca_heatmap", height = 1200), htmlOutput("com_text31"), plotOutput("varmean_bxplot"), htmlOutput("com_text32"),  
-                                          # fluidRow(
-                                    #column(width = 4, 
-                                    htmlOutput("com_text33"), rHandsontableOutput("foo"), #),
-                                    #column(width = 8, br(), br(), br(), rHandsontableOutput("foo1"))),
+                                  
+                                  
+                                  tabPanel("Cluster of Clusters (CoC) Analysis", htmlOutput("com_text14"), withSpinner(plotOutput("coca_cc", height = 500)), br(),htmlOutput("com_text3"), withSpinner(plotOutput("coca_heatmap", height = 1200)), 
+                                           conditionalPanel("input.coca_file != 'coca_load_my_own'" ,
+                                           htmlOutput("com_text31"), withSpinner(plotOutput("varmean_bxplot")), htmlOutput("com_text32"), htmlOutput("com_text33"), rHandsontableOutput("foo")), 
                                            conditionalPanel(condition="input.button9 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value = 4),
                                   id = "cPanels1")
                       
@@ -712,9 +741,10 @@ fluidPage(
                                        br(),br(),br(),br(),br(),br(),br(),br(),br(),br(),
                                        br(),br(),br(),br(),br(),br(),br(),br(),
                                        
+                                       conditionalPanel("input.coca_file != 'coca_load_my_own'" ,
                                        wellPanel(
                                          h4("Contingency Table(s) options:"),
-                                         radioButtons("stratify_by", "Starify by:", inline = FALSE, c("Expression", "Methylation/Variant", "Copy Number"), selected = "Copy Number")
+                                         radioButtons("stratify_by", "Starify by:", inline = FALSE, c("Expression", "Methylation/Variant", "Copy Number"), selected = "Copy Number"))
                                        )
                                        
                                        #wellPanel(
@@ -744,7 +774,8 @@ fluidPage(
                                 numericInput("DataR", label = "Data row", min = 1, max = 15, value = 5),
                                 numericInput("DataC", label = "Data column", min = 1, max = 10, value = 3),
                                 #br(),
-                                actionButton("button10", "Run Analysis")
+                                actionButton("button10", "Run Analysis"),
+                                h5("Hit button to update results after each change in input parameter(s)")
                                 ),
                       conditionalPanel("input.cPanels2 == 2 | input.cPanels2 == 3 |input.cPanels2 == 4", 
                                        wellPanel(
@@ -760,11 +791,11 @@ fluidPage(
                column(8,
                       tabsetPanel(type = "tabs", 
                                   #tabPanel("ReadMe", htmlOutput("ReadMe"), tableOutput("Eg"), htmlOutput("Caption1"), tableOutput("Eg2"), htmlOutput("Caption2"), htmlOutput("blurp"), value = 1),
-                                  tabPanel("HeatMap", plotOutput("Sig_plot", width = 1300, height = 1300 ), 
+                                  tabPanel("HeatMap", withSpinner(plotOutput("Sig_plot", width = 1300, height = 1300 )), 
                                            conditionalPanel(condition="input.button10 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=2), 
-                                  tabPanel("Column Dendrogram", plotOutput("Sig_plot1", height= 600, width = 1500), htmlOutput("Sig_display"), br(), DT::dataTableOutput("Sig_df"), htmlOutput("Sig_pv"), htmlOutput("Sig_pvalue"),  
+                                  tabPanel("Column Dendrogram", withSpinner(plotOutput("Sig_plot1", height= 600, width = 1500)), htmlOutput("Sig_display"), br(), DT::dataTableOutput("Sig_df"), htmlOutput("Sig_pv"), htmlOutput("Sig_pvalue"),  
                                            conditionalPanel(condition="input.button10 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value=3), 
-                                  tabPanel("Row Dendrogram", plotOutput("Sig_plot2", height = 800, width = 1500), htmlOutput("Sig_display2"), br(), DT::dataTableOutput("Sig_df2"), htmlOutput("Sig_pv2"), htmlOutput("Sig_pvalue2"),  
+                                  tabPanel("Row Dendrogram", withSpinner(plotOutput("Sig_plot2", height = 800, width = 1500)), htmlOutput("Sig_display2"), br(), DT::dataTableOutput("Sig_df2"), htmlOutput("Sig_pv2"), htmlOutput("Sig_pvalue2"),  
                                            conditionalPanel(condition="input.button10 & $('html').hasClass('shiny-busy')", tags$div("Loading...",id="loadmessage")), value =4),
                                   id = "cPanels2")
                       ),

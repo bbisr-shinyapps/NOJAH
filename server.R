@@ -94,6 +94,7 @@ function(input, output) {
   )
   
   
+  
   input_gw_data <- reactive({
     if(input$gw_file1 == 'GW_Example1'){
       data <- read.csv("data/TCGA_BRCA_Early_Late_OS_6.9years.csv", header = TRUE, sep = ",", stringsAsFactors = F)
@@ -126,31 +127,50 @@ function(input, output) {
     col.groups <- col.groups[c(-1, -2)] # calculate no. of column groups
     col.groups.name <- names(table(col.groups))
     number.col.groups <- length(col.groups.name)
-   
+    
     # box plot data
-    data2$var <- apply(data2[, c(1:n)], 1, var)
+    data2 <- cbind.data.frame(data2, var=as.numeric(getVar)) #apply(data2[, c(1:n)], 1, var)
     data2$mad <- apply(data2[, c(1:n)], 1, mad)
     data2$IQR <- apply(data2[, c(1:n)], 1, IQR)
-    data2$Rank.var <- rank(data2$var,ties.method= "min")
-    data2$Rank.mad <- rank(data2$mad,ties.method= "min")
-    data2$Rank.IQR <- rank(data2$IQR,ties.method= "min")
-    data2$sumofranks <- data2$Rank.var + data2$Rank.mad + data2$Rank.IQR
     
+    
+    #ngenes_extracted = nrow(data5)
+   
+    dat = list(data=data, n= n, dendo_data = data4, colgroups = col.groups, colgroupsname= col.groups.name, numbercolgroups = number.col.groups, bp_data = data2,  
+               genes = as.character(data[, 1]),  n_genes = nrow(data4),n_samples= ncol(data4)
+               # sp_data = data2.2, extracted_data = data5, n_genes = nrow(data4),n_samples= ncol(data4), percen = percen, ngenes_extracted = nrow(data5)
+               )
+     
+    })
+  
+  
+  scatter_plot_data <- reactive({
+    
+    data2.2 <- input_gw_data()$bp_data
+    n  <- input_gw_data()$n
+    
+    check_data2.2 <<- data2.2
     #scatter plot data
+   # data2.2 <- data2
+    data2.2$Rank.var <- rank(data2.2$var,ties.method= "min")
+    data2.2$Rank.mad <- rank(data2.2$mad,ties.method= "min")
+    data2.2$Rank.IQR <- rank(data2.2$IQR,ties.method= "min")
+    data2.2$sumofranks <- data2.2$Rank.var + data2.2$Rank.mad + data2.2$Rank.IQR
+    
     if(is.null(input$gw_subset)) {
       return()
     } else if(length(input$gw_subset) == 1) {
       if(input$gw_subset == 'VAR') {
-        data2 <- data2[order(data2$var),]
-        data2$var_percen <- ifelse(input$var_PercenChoice == 'Percentile Slider', quantile(data2$var, as.numeric(input$var_pslider)/100),quantile(data2$var, as.numeric(input$var_pInput)/100))
+        data2.2 <- data2.2[order(data2.2$var),]
+        data2.2$var_percen <- ifelse(input$var_PercenChoice == 'Percentile Slider', quantile(data2.2$var, as.numeric(input$var_pslider)/100),quantile(data2.2$var, as.numeric(input$var_pInput)/100))
         percen <- ifelse(input$var_PercenChoice == 'Percentile Slider', input$var_pslider,  input$var_pInput)
       } else if(input$gw_subset == 'MAD') {
-        data2 <- data2[order(data2$mad),]
-        data2$mad_percen <- ifelse(input$mad_PercenChoice == 'Percentile Slider', quantile(data2$mad, input$mad_pslider/100),quantile(data2$mad, input$mad_pInput/100))
+        data2.2 <- data2.2[order(data2.2$mad),]
+        data2.2$mad_percen <- ifelse(input$mad_PercenChoice == 'Percentile Slider', quantile(data2.2$mad, input$mad_pslider/100),quantile(data2.2$mad, input$mad_pInput/100))
         percen <- ifelse(input$mad_PercenChoice == 'Percentile Slider', input$mad_pslider,  input$mad_pInput)
       } else if(input$gw_subset == 'IQR') {
-        data2 <- data2[order(data2$IQR),]
-        data2$iqr_percen <- ifelse(input$iqr_PercenChoice == 'Percentile Slider', quantile(data2$IQR, input$iqr_pslider/100),quantile(data2$IQR, input$iqr_pInput/100))
+        data2.2 <- data2.2[order(data2.2$IQR),]
+        data2.2$iqr_percen <- ifelse(input$iqr_PercenChoice == 'Percentile Slider', quantile(data2.2$IQR, input$iqr_pslider/100),quantile(data2.2$IQR, input$iqr_pInput/100))
         percen <- ifelse(input$iqr_PercenChoice == 'Percentile Slider', input$iqr_pslider,  input$iqr_pInput)
       } 
       
@@ -159,26 +179,26 @@ function(input, output) {
       if(length(input$gw_subset) > 1) {
         
         if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset) {
-          data2 <- data2[order(data2$sumofranks),]
-          data2$IMVA_percen <- ifelse(input$IMVA_PercenChoice == 'Percentile Slider', quantile(data2$sumofranks, as.integer(input$IMVA_pslider)/100),quantile(data2$sumofranks, as.integer(input$IMVA_pInput)/100))
+          data2.2 <- data2.2[order(data2.2$sumofranks),]
+          data2.2$IMVA_percen <- ifelse(input$IMVA_PercenChoice == 'Percentile Slider', quantile(data2.2$sumofranks, as.integer(input$IMVA_pslider)/100),quantile(data2.2$sumofranks, as.integer(input$IMVA_pInput)/100))
           percen <- ifelse(input$IMVA_PercenChoice == 'Percentile Slider', input$IMVA_pslider,  input$IMVA_pInput)
           
         } else if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & !("IQR" %in% input$gw_subset) ) {
-          data2$sumofranks_VM <- data2$Rank.var + data2$Rank.mad 
-          data2 <- data2[order(data2$sumofranks_VM),]
-          data2$var_mad_percen <- ifelse(input$var_mad_PercenChoice == 'Percentile Slider', quantile(data2$sumofranks_VM, input$var_mad_pslider/100),quantile(data2$sumofranks_VM, input$var_mad_pInput/100))
+          data2.2$sumofranks_VM <- data2.2$Rank.var + data2.2$Rank.mad 
+          data2.2 <- data2.2[order(data2.2$sumofranks_VM),]
+          data2.2$var_mad_percen <- ifelse(input$var_mad_PercenChoice == 'Percentile Slider', quantile(data2.2$sumofranks_VM, input$var_mad_pslider/100),quantile(data2.2$sumofranks_VM, input$var_mad_pInput/100))
           percen <- ifelse(input$var_mad_PercenChoice == 'Percentile Slider', input$var_mad_pslider, input$var_mad_pInput)
           
         } else if("VAR" %in% input$gw_subset & "IQR" %in% input$gw_subset & !("MAD" %in% input$gw_subset)) {
-          data2$sumofranks_VI <- data2$Rank.var + data2$Rank.IQR 
-          data2 <- data2[order(data2$sumofranks_VI),]
-          data2$var_iqr_percen <- ifelse(input$var_iqr_PercenChoice == 'Percentile Slider', quantile(data2$sumofranks_VI, input$var_iqr_pslider/100),quantile(data2$sumofranks_VI, input$var_iqr_pInput/100))
+          data2.2$sumofranks_VI <- data2.2$Rank.var + data2.2$Rank.IQR 
+          data2.2 <- data2.2[order(data2.2$sumofranks_VI),]
+          data2.2$var_iqr_percen <- ifelse(input$var_iqr_PercenChoice == 'Percentile Slider', quantile(data2.2$sumofranks_VI, input$var_iqr_pslider/100),quantile(data2.2$sumofranks_VI, input$var_iqr_pInput/100))
           percen <- ifelse(input$var_iqr_PercenChoice == 'Percentile Slider', input$var_iqr_pslider,  input$var_iqr_pInput)
           
         } else  if("MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset & !("VAR" %in% input$gw_subset)) {
-          data2$sumofranks_MI <- data2$Rank.mad + data2$Rank.IQR 
-          data2 <- data2[order(data2$sumofranks_MI),]
-          data2$mad_iqr_percen <- ifelse(input$mad_iqr_PercenChoice == 'Percentile Slider', quantile(data2$sumofranks_MI, input$mad_iqr_pslider/100),quantile(data2$sumofranks_MI, input$mad_iqr_pInput/100))
+          data2.2$sumofranks_MI <- data2.2$Rank.mad + data2.2$Rank.IQR 
+          data2.2 <- data2.2[order(data2.2$sumofranks_MI),]
+          data2.2$mad_iqr_percen <- ifelse(input$mad_iqr_PercenChoice == 'Percentile Slider', quantile(data2.2$sumofranks_MI, input$mad_iqr_pslider/100),quantile(data2.2$sumofranks_MI, input$mad_iqr_pInput/100))
           percen <- ifelse(input$mad_iqr_PercenChoice == 'Percentile Slider', input$mad_iqr_pslider,  input$mad_iqr_pInput)
           
         }  
@@ -190,28 +210,28 @@ function(input, output) {
       return(NULL)
     } else if(length(input$gw_subset) == 1) {
       if(input$gw_subset == 'VAR') {
-        data5 <- data2[data2$var > data2$var_percen[1], 1:n]
+        data5 <- data2.2[data2.2$var > data2.2$var_percen[1], 1:n]
       } else if(input$gw_subset == 'MAD') {
-        data5 <- data2[data2$mad > data2$mad_percen[1], 1:n]
+        data5 <- data2.2[data2.2$mad > data2.2$mad_percen[1], 1:n]
       } else if(input$gw_subset == 'IQR') {
-        data5 <- data2[data2$IQR > data2$iqr_percen[1], 1:n]
+        data5 <- data2.2[data2.2$IQR > data2.2$iqr_percen[1], 1:n]
       } 
     }
     else 
       if(length(input$gw_subset) > 1) {
         if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset) {
-          data5 <- data2[data2$sumofranks > data2$IMVA_percen[1], 1:n]
+          data5 <- data2.2[data2.2$sumofranks > data2.2$IMVA_percen[1], 1:n]
         }else if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & !("IQR" %in% input$gw_subset)) {
-          data5 <- data2[data2$sumofranks_VM > data2$var_mad_percen[1], 1:n]
+          data5 <- data2.2[data2.2$sumofranks_VM > data2.2$var_mad_percen[1], 1:n]
         } else if("VAR" %in% input$gw_subset & "IQR" %in% input$gw_subset & !("MAD" %in% input$gw_subset)) {
-          data5 <- data2[data2$sumofranks_VI > data2$var_iqr_percen[1], 1:n]
+          data5 <- data2.2[data2.2$sumofranks_VI > data2.2$var_iqr_percen[1], 1:n]
         } else  if("MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset & !("VAR" %in% input$gw_subset)) {
-          data5 <- data2[data2$sumofranks_MI > data2$mad_iqr_percen[1], 1:n]
+          data5 <- data2.2[data2.2$sumofranks_MI > data2.2$mad_iqr_percen[1], 1:n]
         }  
       }
     
-    dat = list(data=data, n= n, dendo_data = data4, colgroups = col.groups, colgroupsname= col.groups.name, numbercolgroups = number.col.groups, bp_sp_data = data2, extracted_data = data5, n_samples= ncol(data4), n_genes = nrow(data4),  percen = percen )
-    
+    dat  = list(sp_data = data2.2, extracted_data = data5, percen = percen, ngenes_extracted = nrow(data5))
+  
   })
   
   dend1 <- eventReactive(input$button1, {
@@ -224,7 +244,7 @@ function(input, output) {
     cc1 = vector()
     
     ## Set color palette
-    col1 <- colorRampPalette(c(input$low,input$mid,input$high))(299)
+    col1 <- colorRampPalette(c("red","black","green"))(299)
     colors <- c(seq(-1,-0.2,length=100),seq(-0.2,0.2,length=100),seq(0.2,1,length=100)) # check slider
     
     cc1 <- col_color(col1 = col1, col.groups= col.groups, number.col.groups= number.col.groups, col.groups.name= col.groups.name)
@@ -261,115 +281,141 @@ function(input, output) {
     } else if(number.col.groups==2) {
       legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2])), col = c("darkblue", "grey"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
     } else if(number.col.groups==3) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3])), col = c("darkblue", "grey", "orange"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3])), col = c("darkblue", "grey", "orange"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     } else if(number.col.groups==4) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4])), col = c("darkblue", "grey", "orange", "yellow"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4])), col = c("darkblue", "grey", "orange", "yellow"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     } else if(number.col.groups==5) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5])), col = c("darkblue", "grey", "orange", "yellow", "purple"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5])), col = c("darkblue", "grey", "orange", "yellow", "purple"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     } else if(number.col.groups==6) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     } else if(number.col.groups==7) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     } else if(number.col.groups==8) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink", "brown"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink", "brown"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     } else if(number.col.groups==9) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink", "brown", "darkorchid2"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable9)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink", "brown", "darkorchid2"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     } else if(number.col.groups==10) {  
-      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9], col.groups.name[10])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink", "brown", "darkorchid2", "maroon"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$sizeClable)
+      legend("topright", legend = paste(c(col.groups.name[1], col.groups.name[2], col.groups.name[3], col.groups.name[4], col.groups.name[5], col.groups.name[6], col.groups.name[7], col.groups.name[8], col.groups.name[9], col.groups.name[10])), col = c("darkblue", "grey", "orange", "yellow", "purple", "darkgreen", "hotpink", "brown", "darkorchid2", "maroon"), lty= 1, lwd = 10, pt.cex = 1, cex = 2*input$gw_dend_size)
     }
     
   })
   
-  output$gw_dend <- renderPlot({
+  output$gw_dend <- renderPlot({ #renderCachedPlot({ #
      dend1()
-  })
+  }#,
+ # cacheKeyExpr = { 
+  #  list(input$gw_file1, input$GW_norm) #, input$GW_norm2, input$GW_inSlider, input$GW_dist, input$GW_hclust, input$gw_dend_size)
+  #}, cache = memoryCache()
+  )
   
   
   
-  output$geneSelector <- renderUI({
-    selectizeInput(inputId = "Genes", "Choose Option:", as.list(getOSgenes()),options=list(maxOptions=getOSgenes())) 
-  })
+  #output$geneSelector <- renderUI({
+  #  #selectizeInput(inputId = "Genes", "Choose Option:", as.list(getOSgenes()),options=list(maxOptions=getOSgenes())) 
+  #  selectizeInput(inputId = "Genes", "Choose Option:", as.list(input_gw_data()$genes[1:605]),options=list(maxOptions=input_gw_data()$n_genes[1:605])) 
+  #})
   
-  output$dropdowngene <- renderText({ 
-    paste("You have selected gene", input$Genes)
-  })
+  #output$dropdowngene <- renderText({ 
+  #  paste("You have selected gene", input$Genes)
+  #})
   
   
+  #getOSgenes <- eventReactive(input$button1, {
+  #  if(!is.null(input_gw_data()$genes)) 
+  #  {
+  #    return(input_gw_data()$genes)
+  #  }
+  #  else 
+  #    return(NULL)
+  #})
   
-  getOSgenes <- reactive({
-    if(!is.null(input_gw_data()$data)) 
-    {
-      data <- input_gw_data()$data
-      return(as.character(data[, 1]))
-    }
-    else 
-      return(NULL)
-  })
-  
-  output$n_selected <- renderUI({ 
-    input$button1
-   
-    data3 <- input_gw_data()$extracted_data
-    st1 <- paste("The number of genes selected : ")
-    st2 <- paste(nrow(data3))
+  gs <- eventReactive(input$button1, {
     
-    n_sel <<- nrow(data3)
+    n_sel <<- scatter_plot_data()$ngenes_extracted
     isolate(
-    HTML(paste(st1, strong(st2)), sep = ' ')
+      HTML(paste("The number of genes selected : ", strong(n_sel)), sep = ' ')
     )
   })
   
+  
+  output$n_selected <- renderUI({ 
+    gs()
+    
+  })
+  
   bplot <- eventReactive(input$button1, {
-    data <- input_gw_data()$bp_sp_data
+    data <- input_gw_data()$bp_data
     
-    y <- list(
-      title = " ")
-    plot_ly(data, y = data$var, type = 'box', name = 'VAR') %>%
-      add_trace(y = data$mad, name = 'MAD')  %>%
-      add_trace(y = data$IQR, name = 'IQR') %>%
-      layout(yaxis = y)
+    boxplot(data$var, data$mad, data$IQR, names = c("VAR", "MAD", "IQR"), border = c("blue", "orange", "green"),col = c("blue", "orange", "green"))
+   #beanplot(data$var, data$mad, data$IQR, col = c("orange", "blue", "green"), border = "black")
+  })
+  
+ # output$Boxplot <- renderPlotly({
+  output$Boxplot <- renderPlot({
+       bplot()
+    
+  })
+  
+ rt <- eventReactive(input$button1, {
+   data <- scatter_plot_data()$sp_data #input_gw_data()$sp_data
+   gene_names <- sub("\\|.*", "", rownames(data))
    
-  })
+   goi <- ifelse(input$Genes== "", NA, input$Genes)
+   
+   if(!is.na(goi) & (any(goi == gene_names)== FALSE))
+   {
+     paste("Please select valid gene id")
+   }
+ })  
   
-  output$Boxplot <- renderPlotly({
-    bplot()
-  })
+ output$text1 <- renderText({
+   rt()
   
-  splot <- eventReactive(input$button1, {
-    data <- input_gw_data()$bp_sp_data
+   })
+ 
+ 
+ splot <- eventReactive(input$button1, {
+ # splot <- reactive ({ 
+   data <- scatter_plot_data()$sp_data #input_gw_data()$sp_data
+   
+   gene_names <- sub("\\|.*", "", rownames(data))
+   
+   goi <- ifelse(input$Genes== "", NA, input$Genes)
+   #goi <- ifelse(input$Sgene == "", NA, input$Sgene)
     
-    goi <- ifelse(input$Genes== "", NA, input$Genes)
+    ding <<- goi
+    dong <<- data
     
     if(is.null(input$gw_subset)) {
       return()
     }
- 
+    
     if(length(input$gw_subset) == 1) {
       if(input$gw_subset == 'VAR') {   
-        p <- plot_ly(data, y=~var, type = "scatter", mode = "markers", name = "Ordered variances", color = I('cornflowerblue')) %>%
-          add_trace(p, y = ~var_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off'  )
-        if (!is.na(goi[1])) {
-          p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$var, text = input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
+       
+        plot(data$var, col = "red", ylab= "VAR", xlab = "", pch = 20)
+        if(!is.na(goi[1])) {
+          poi <- which(goi == gene_names)
+          points(x= poi, y = data[poi,]$var, col = "black", pch =20, cex= 1.5)  
         }
-        p %>% layout(showlegend = TRUE)
-        p
+        abline(h= data$var_percen[1], col = "red", lty =2)
+  
       }
       else if(input$gw_subset == 'MAD') {
-        p<- plot_ly(data, y=~mad, type = "scatter", mode = "markers", name = "Ordered MAD", color = I('darkgoldenrod1')) %>%
-          add_trace(p, y = data$mad_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off' )
-        if (!is.na(goi[1])) {
-          p<- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$mad, text = input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
+        plot(data$mad, col = "darkgoldenrod1", ylab= "MAD", xlab = "", pch = 20)
+        if(!is.na(goi[1])) {
+          poi <- which(goi == gene_names) 
+          points(x= poi, y = data[poi,]$mad, col = "black", pch =20, cex= 1.5)  
         }
-        p %>% layout(showlegend = TRUE)
-        p
+        abline(h= data$mad_percen[1], col = "red", lty =2)
+        
       } else if(input$gw_subset == 'IQR') {
-        p <- plot_ly(data, y=~IQR, type = "scatter", mode = "markers", name = "Ordered IQR", color = I('chartreuse3')) %>%
-          add_trace(p, y = ~iqr_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name ='Percentile cut-off' )
-        if (!is.na(goi[1])) {
-          p<- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$IQR, text = input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
-        }
-        p %>% layout(showlegend = TRUE)
-        p
+        plot(data$IQR, col = "green", ylab= "IQR", xlab = "", pch = 20)
+        if(!is.na(goi[1])) {
+          poi <- which(goi == gene_names)
+          points(x= poi, y = data[poi,]$IQR, col = "black", pch =20, cex= 1.5) 
+          }
+        abline(h= data$iqr_percen[1], col = "red", lty =2)
       } 
       
     } else 
@@ -377,55 +423,56 @@ function(input, output) {
         
         if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset) {
           
-          p <- plot_ly(data, y=~sumofranks, type = "scatter", mode = "markers", name = "Ordered sum of VAR, MAD and IQR", color = I('grey')) %>%
-            add_trace(p, y = ~IMVA_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off' ) 
-          if (!is.na(goi[1])) {
-            p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
+          plot(data$sumofranks, col = "grey", ylab= "Ordered sum of ranks of VAR, MAD and IQR", xlab = "", pch = 20)
+          if(!is.na(goi[1])) {
+            poi <- which(grepl(input$Genes, rownames(data))) 
+            points(x= poi, y = data[poi,]$sumofranks, col = "black", pch =20, cex= 1.5)  
           }
-          p %>% layout(showlegend = TRUE)
-          p
+          abline(h= data$IMVA_percen[1], col = "red", lty =2)
         }
         
         else if("VAR" %in% input$gw_subset & "MAD" %in% input$gw_subset & !("IQR" %in% input$gw_subset) ) {
-          p <- plot_ly(data, y=~sumofranks_VM, type = "scatter", mode = "markers", name = "Ordered sum of VAR and MAD",  color = I('grey')) %>%
-            add_trace(p, y = ~var_mad_percen, line=list(dash=3, width= 1, color = "grey" ), mode = "lines", name = 'Percentile cut-off'  )
-          if (!is.na(goi[1])) {
-            p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks_VM, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
+          
+          plot(data$sumofranks_VM, col = "grey", ylab= "Ordered sum of ranks of VAR and MAD", xlab = "", pch = 20)
+          if(!is.na(goi[1])) {
+            poi <- which(goi == gene_names)
+            points(x= poi, y = data[poi,]$sumofranks_VM, col = "black", pch =20, cex= 1.5)  
           }
-          p %>% layout(showlegend = TRUE)
-          p
+          abline(h= data$var_mad_percen[1], col = "red", lty =2)
         }
         else if ("VAR" %in% input$gw_subset & "IQR" %in% input$gw_subset& !("MAD" %in% input$gw_subset)) {
           
-          p <- plot_ly(data, y=~sumofranks_VI, type = "scatter", mode = "markers", name = "Ordered sum of VAR and IQR", color = I('grey')) %>%
-            add_trace(p, y = ~var_iqr_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off'  )
-          if (!is.na(goi[1])) {
-            p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks_VI, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
+          plot(data$sumofranks_VI, col = "grey", ylab= "Ordered sum of ranks of VAR and IQR", xlab = "", pch = 20)
+          if(!is.na(goi[1])) {
+            poi <- which(goi == gene_names)
+            points(x= poi, y = data[poi,]$sumofranks_VI, col = "black", pch =20, cex= 1.5)  
           }
-          p %>% layout(showlegend = TRUE)
-          p
-        }
+          abline(h= data$var_iqr_percen[1], col = "red", lty =2)
+          
+          }
         else if ("MAD" %in% input$gw_subset & "IQR" %in% input$gw_subset & !("VAR" %in% input$gw_subset)) {
-          p <- plot_ly(data, y=~sumofranks_MI, type = "scatter", mode = "markers", name = "Ordered sum of MAD and IQR", color = I('grey')) %>%
-            add_trace(p, y = ~mad_iqr_percen, line=list(dash=3, width= 1, color = "red"), mode = "lines", name = 'Percentile cut-off'  )
-          if (!is.na(goi[1])) {
-            p <- add_trace(p, x= which(grepl(input$Genes, rownames(data))), y= data[which(grepl(input$Genes, rownames(data))),]$sumofranks_MI, text= input$Genes, showlegend = TRUE, type = "scatter", mode = "markers", name = input$Genes, marker = list(color = "orange"))
+          
+          plot(data$sumofranks_MI, col = "grey", ylab= "Ordered sum of ranks of MAD and IQR", xlab = "", pch = 20)
+          if(!is.na(goi[1])) {
+            poi <- which(goi == gene_names)
+            points(x= poi, y = data[poi,]$sumofranks_MI, col = "black", pch =20, cex= 1.5)  
           }
-          p %>% layout(showlegend = TRUE)
-          p
+          abline(h= data$mad_iqr_percen[1], col = "red", lty =2)
         } 
       }
+    
   })
   
-  output$GW_Scatter_LH <- renderPlotly({
-    
-    splot()
+  
+  output$GW_Scatter_LH <- renderPlot({
+     splot()
   }) 
+  
   
   extracted_data2 <- reactive({
     if (input$gw_file_1 == 'GW_Example_1') {
        
-        data3 <- input_gw_data()$extracted_data
+        data3 <- scatter_plot_data()$extracted_data #input_gw_data()$extracted_data
         colheaders <- sub("^.*\\.","", colnames(data3))
         names(data3) <- gsub("\\.{2}.*", "", colnames(data3))
         data4 <- rbind(colheaders, data3)
@@ -520,8 +567,14 @@ function(input, output) {
       else if(grepl(".txt", inFile_2[1])) { data1 = read.table(as.character(inFile_2$datapath), header = TRUE, sep = "\t", stringsAsFactors = F) }
       else if(grepl(".rds", inFile_2[1])) { data1 = readRDS(as.character(inFile_2$datapath)) }
       
+      #dding <<- data1
+      
       data1 <- data1[,order(data1[1, ])]
       data2 <- data1[order(data1[,2]),]
+      
+      # remove rows with zero variance
+      #data2 <- data2[apply(data2[(as.integer(input$DataR2)-1):nrow(data2),as.numeric(input$DataC2):ncol(data2)], 1, var) != 0, ]
+      
       
       ### row groups
       gene <- as.character(data2$gene_id)
@@ -1791,6 +1844,9 @@ function(input, output) {
         col.groups.name <- names(table(col.groups))
         number.col.groups <- length(col.groups.name)
         
+        name_clust <<- paste(col.groups.name, collapse= ", ")
+        count_clust <<- paste(table(col.groups), collapse = ", ")
+        
         ## additional info on columns and rows
         colbar_data <-  as.matrix(t(data2[1:(as.numeric(input$DataR1)-2), c(1, (as.integer(input$DataC1)-1):ncol(data2))])) #t(data[1:(6-2), c(1, 3:ncol(data))]) 
         colnames(colbar_data) <- as.character(unlist(colbar_data[1,]))
@@ -2593,7 +2649,8 @@ function(input, output) {
         
         names(cuttable)[1] <- "Sample"
         names(cuttable)[2] <- "Cluster"
-        data_l1_l2 <-  extracted_data2() #core_mv_hm_data()$data_use 
+        data_l1_l2 <-  extracted_data2()
+        check_d1 <<- data_l1_l2 #extracted_data2() #core_mv_hm_data()$data_use 
        
         data_l1_l2 <- data_l1_l2[1,c(-1, -2)]
         t_data_l1_l2 <- t(data_l1_l2)
@@ -2663,12 +2720,14 @@ function(input, output) {
     
     cc_rowDen <- reactive({
       if(input$cc_cutrowden == 'TRUE') {
-        cuttable2 <- as.data.frame(cutree(as.hclust(core_mv_hm_data()$hm[[1]]$rowDendrogram), k=as.integer(input$cc_cuttree2))[as.hclust(mv_hm_data()$hm[[1]]$rowDendrogram)$order])
+        cuttable2 <- as.data.frame(cutree(as.hclust(core_mv_hm_data()$hm[[1]]$rowDendrogram), k=as.integer(input$cc_cuttree2))[as.hclust(core_mv_hm_data()$hm[[1]]$rowDendrogram)$order])
         cuttable2 <- cbind.data.frame(rownames(cuttable2), cuttable2)
         names(cuttable2)[1] <- "gene_id"
         names(cuttable2)[2] <- "Cluster"
-        data_l1_l2_2 <- extracted_data2()
+        check1 <<- cuttable2
+        data_l1_l2_2 <- extracted_data2() #core_mv_hm_data()$data_use #extracted_data2() #
         data_l1_l2_2 <- data_l1_l2_2[-1, c(1,2)]
+        check2 <<-  data_l1_l2_2
         m2 <- merge(cuttable2, data_l1_l2_2, by = "gene_id", sort= F)
         m2 <- m2[, c(1, 3, 2)]
         m2$order <- 1:nrow(m2)
@@ -2880,7 +2939,7 @@ function(input, output) {
         if(input$button1){
           paste(
             paste0("A[Input Data: <br/> <br/> No. of features/genes: ", input_gw_data()$n_genes, "<br/> No. of samples: ", input_gw_data()$n_samples, "<br/> No. of sample groups: ", input_gw_data()$numbercolgroups, "] --> B[Filtering based on: <br/> <br/>", as.character(paste(input$gw_subset, collapse = '<br/>')), "]"), 
-            paste0("B --> C[Percentile cut-off: greater than P", as.character(input_gw_data()$percen), " <br/> Features selected: ", paste(n_sel, collapse= "AND <br/>"), "]"),
+            paste0("B --> C[Percentile cut-off: greater than P", as.character(scatter_plot_data()$percen), " <br/> Features selected: ", paste(n_sel, collapse= "AND <br/>"), "]"),
             sep = "\n", collapse = "" )
         }, if(input$button2){
           paste(
@@ -3284,6 +3343,8 @@ function(input, output) {
       check_cc2 <<- cc2
       check_cc3 <<- cc3
       
+      cc.final <- NULL
+      
       if("EXP" %in% input$coca_platform & "PROP" %in% input$coca_platform & "CNV" %in% input$coca_platform) {
         cc.final <- coca(cc= list(cc1, cc2, cc3), type = c("E", ifelse(input$dt_choice== "V", "V", "M"), "CNV"), opt_k= c(as.integer(input$Exp_opt_k), as.integer(input$Variant_opt_k), as.integer(input$CNV_opt_k)), coca_reps = as.integer(input$coca_pItems), clust= input$coca_hclust, dist= input$coca_dist, coca_opt_k= as.integer(input$coca_opt_k))
       } else if("EXP" %in% input$coca_platform & "PROP" %in% input$coca_platform & !("CNV" %in% input$coca_platform)) {
@@ -3294,6 +3355,8 @@ function(input, output) {
         cc.final <- coca(cc= list(cc1, cc2), type = c(ifelse(input$dt_choice== "V", "V", "M"), "CNV"), opt_k= c(as.integer(input$Variant_opt_k), as.integer(input$CNV_opt_k)), coca_reps = as.integer(input$coca_pItems), clust= input$coca_hclust, dist= input$coca_dist, coca_opt_k= as.integer(input$coca_opt_k))
       }
     }
+    
+    consensus_clustering(dinput=cc.final[["data_in"]], mK=10, rep=as.integer(input$coca_pItems), pI=0.8, pF= 1, cAlg="hc", dist=input$coca_dist, iL=input$coca_hclust, fL=input$coca_hclust)
     
     return(list(output= cc.final[["output"]], data= cc.final[["data"]], distance = cc.final[["distance"]]))
     
@@ -3851,8 +3914,9 @@ function(input, output) {
   
   output$com_text14 <- renderUI({
     hs1 <- paste("&emsp;")
+    hs1.2 <- paste("Individual data types (such as, Expression, Methylation/Variant, CNV) must be clustered using the corresponding tabs or outside NOJAH (input data as load my own dataset) prior to performing Cluster of Cluster (CoC) analysis on this tab.")
     hs2 <- paste("Determination of number of clusters by Consensus Clustering")
-    HTML(paste(h3(strong(hs2)), hs1, sep = '<br/>'))
+    HTML(paste(hs1, hs1.2, h3(strong(hs2)), hs1, sep = '<br/>'))
   })
   
   
@@ -5140,7 +5204,7 @@ function(input, output) {
                                  c("Normalized by (row/column/both)", input$Sig_norm2),
                                  c("Distance Method", input$Sig_dist),
                                  c("Clustering Method", input$Sig_hclust),
-                                 c("Scale", ifelse(input$Sig_norm == "none", paste(as.integer(min(data)), as.integer(max(data)), sep = ":"), paste(input$Sig_inSlider[1], input$Sig_inSlider[2], sep=":"))),
+                                 c("Scale", ifelse(input$Sig_norm == "none", paste(as.integer(min(sig_hm_plot()$data)), as.integer(max(sig_hm_plot()$data)), sep = ":"), paste(input$Sig_inSlider[1], input$Sig_inSlider[2], sep=":"))),
                                  c("HeatMap colors", paste(input$Sig_low, input$Sig_mid, input$Sig_high, sep="-")))
           names(df)[1] <- "Parameters"
           names(df)[2] <- "Value Selected"
