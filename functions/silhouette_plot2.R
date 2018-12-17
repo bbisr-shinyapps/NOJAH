@@ -16,7 +16,7 @@ silhouette_plot2 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
   res1 <- m0[,2]
   
   sk2   <- silhouette(res1, dt ) # res - has the order of samples is same as in this object
-  #rownames(sk2) = names(dt) # m0$order
+  rownames(sk2) = names(dt) # m0$order
   
   sil.order <- as.numeric(rownames(sortSilhouette(sk2)))
   m0.1 <- m0[match(sil.order, m0$order),]
@@ -49,11 +49,11 @@ silhouette_plot2 <- function(data_use, opt_k, res, dist, upto_width, cols = cols
 
   if(dist == "pearson" | dist == "spearman")
     { dt4 = as.dist(1-cor(data_use2,method=dist))  }
-  else 
+    else 
     { dt4 = dist(t(data_use2), method = dist) }
  
   sk3   <- silhouette(res4, dt4)
-  #rownames(sk3) = rownames(dt4)
+  rownames(sk3) = rownames(dt4)
   
   #par(mfrow = c(1, 2))
   #plot(sk2,  main = "Silhouette Plot of 'ALL' Samples", cex.names=0.6, max.strlen= 8, col = m0$colors)
