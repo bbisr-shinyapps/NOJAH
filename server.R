@@ -393,7 +393,7 @@ function(input, output) {
     if(length(input$gw_subset) == 1) {
       if(input$gw_subset == 'VAR') {   
        
-        plot(data$var, col = "red", ylab= "VAR", xlab = "", pch = 20)
+        plot(data$var, col = "blue", ylab= "VAR", xlab = "", pch = 20)
         if(!is.na(goi[1])) {
           poi <- which(goi == gene_names)
           points(x= poi, y = data[poi,]$var, col = "black", pch =20, cex= 1.5)  
@@ -3360,7 +3360,7 @@ function(input, output) {
     
     return(list(output= cc.final[["output"]], data= cc.final[["data"]], distance = cc.final[["distance"]]))
     
-  })
+  }, ignoreNULL = FALSE)
   
   
   
